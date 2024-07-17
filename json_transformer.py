@@ -1,7 +1,7 @@
 f = open("bn254_reference.json", "r")
 lines = f.read()
 testData = json.loads(lines)
-testDataTwo = {'private_keys': testData['private_keys']}
+testDataThree = {'private_keys': testData['private_keys']}
 for field in list(testData.keys()):
 	simplifiedField = []
 	print(field)
@@ -14,7 +14,8 @@ for field in list(testData.keys()):
 		for entry in testData[field]:
 			objPair = []
 			for obj in list(entry.values()):
-				objPair.append([int(value) for value in list(obj.values())])
+				for value in list(obj.values()):
+					objPair.append(int(value))
 			simplifiedField.append(objPair)
-	testDataTwo[field] = simplifiedField
-print(testDataTwo)
+	testDataThree[field] = simplifiedField
+print(testDataThree)
