@@ -1,7 +1,7 @@
 pragma solidity ^0.8;
 import "forge-std/Test.sol";
 import "forge-std/console2.sol";
-//import "./Strings.sol";
+import "./Strings.sol";
 
 // This is a Foundry contract written in Solidity, to test
 // the BLS.sol library, via the the test contract of test_suite.sol
@@ -68,13 +68,21 @@ contract test_suiteTest is Test
     uint256[][] g1_signatures;
     uint256[][] g2_public_keys;
     uint256[][] svdw;
+    bytes[] randByteTests;
+    uint256 zero = 0;
+    uint64 zeroSixFour = 0;
+    bytes zpad = abi.encodePacked(abi.encodePacked(zero, zero, zero, zero), zeroSixFour);
     uint256 field_order = 0x30644e72e131a029b85045b68181585d97816a916871ca8d3c208c16d87cfd47;
-    BLSTest bls = BLSTest(address(BLSTest));
+    //BLSTest bls = BLSTest(address(BLSTest));
     string json = vm.readFile("/Users/mitch/Desktop/solBlsTest/blsTest/test/bn254_reference_transformed.json");
     uint256[] private_keys = vm.parseJsonUintArray(json, ".private_keys");
+    string jsonTwo = vm.readFile("/Users/mitch/Desktop/solBlsTest/blsTest/test/json3.json");
     function setUp() noGasMetering public
     {
-        for(uint256 i = 0; i < 1000; i++)
+        string memory left = string.concat(".", Strings.toString(10));
+        string memory lookup = string.concat(left, "");
+        randByteTests = vm.parseJsonBytesArray(jsonTwo, lookup);
+        /*for(uint256 i = 0; i < 1000; i++)
         {
             string memory strNum = Strings.toString(i);
             string memory left = string.concat("[", strNum);
@@ -87,31 +95,40 @@ contract test_suiteTest is Test
             g2_public_keys.push(rawG2);
             e2_non_g2.push(rawE2);
             svdw.push(rawSVDW);
-        }
+        }*/
     }
-    
     //bytes rawG1 = vm.parseJson(json, ".G1_signatures[0]");
     //G1SigPair g1_signatures = abi.decode(rawG1, (G1SigPair));
     //JsonInputs jsonInput = abi.decode(data, (JsonInputs));
     function testPrint() public view
     {
-        console.log(private_keys[54]);
+        console.logBytes(randByteTests[0]);
+        console.logBytes(randByteTests[1]);
+        console.logBytes(abi.encodePacked(zpad));
+        // Ok, these byte reads work
+        // Its time for us to push a bunch of them through
+        // encode_message and hash_to_field until they work
+
+        /*console.log(private_keys[54]);
         console.log(g1_signatures[54][0],g1_signatures[54][1]);
         console.log(g2_public_keys[54][0],g2_public_keys[54][1],g2_public_keys[54][2],g2_public_keys[54][3]);
         console.log(e2_non_g2[54][0],e2_non_g2[54][1],e2_non_g2[54][2],e2_non_g2[54][3]);
-        console.log(svdw[54][0],svdw[54][1],svdw[54][2]);
+        console.log(svdw[54][0],svdw[54][1],svdw[54][2]);*/
         //console.log(jsonInput.svdw[0]);
     }
 
-    function expand_message(bytes[] message) public pure
+    function testExpand_Message() public view
     {
         uint256 outputLen = 96;
-        string domain = "BLS_SIG_BN254G1_XMD:KECCAK-256_SSWU_RO_NUL_";
-        uint8[136] zpad;
-        bytes[] b_0 = abi.encodePacked(zpad,message,outputLen >> 8,outputLen & 0xff, 0,domain,domain.length);
-        bytes[] b_0_hashed = keccak256(b_0);
-        bytes[] b_i = abi.encodePacked(b_0_hashed,1,domain,domain.length);
-        bytes[] b_i_hashed = keccak256(b_i);
+        uint256 domainLength = 43;
+        uint256 one = 1;
+        string memory domain = "BLS_SIG_BN254G1_XMD:KECCAK-256_SSWU_RO_NUL_";
+        bytes memory b_0 = abi.encodePacked(zpad,randByteTests[0],outputLen >> 8,outputLen & 255, zero,domain,domainLength);
+        bytes32 b_0_hashed = keccak256(b_0);
+        console.logBytes32(b_0_hashed);
+        bytes memory b_i = abi.encodePacked(b_0_hashed,one,domain,domainLength);
+        bytes32 b_i_hashed = keccak256(b_i);
+        console.logBytes32(b_i_hashed);
         // copy first 32 bytes of b_i_hashed into a 96 byte array three times, then return array
         // return out
     }
@@ -124,10 +141,10 @@ contract test_suiteTest is Test
         uint256 resOne = expanded[0:48] % field_order;
         uint resTwo = expanded[48:] % field_order;
         return [resOne, resTwo];
-        /*for (let i = 0; i < count; i++)
+        for (let i = 0; i < count; i++)
         {
             
-        }*/
+        }
 
     }
     function testG1() public
