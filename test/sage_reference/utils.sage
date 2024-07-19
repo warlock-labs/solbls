@@ -7,6 +7,8 @@ E1 = EllipticCurve(Fp,[0,3])
 E2 = EllipticCurve(Fp2, [0, 3/(9+u)])
 
 r = E1.order()
+c2 = 21888242871839275222246405745257275088844257914179612981679871602714643921549
+assert E2.order() == c2*r
 
 G1 = E1.gens()[0]
 while G1.order() != r:
@@ -49,7 +51,7 @@ def sign(private_key):
     return signature
 
 def generate_non_r_torsion_point():
-    while True:
-        P = E2.random_point()
-        if (p + 1 - E2.trace_of_frobenius()) * P != E2(0) and r * P != E2(0):
-            return P
+    P = E2.random_point() #E2(2,sqrt(2**3+b))
+    # We want P to be of order 10069
+    P = 5864401 * 1875725156269 * 197620364512881247228717050342013327560683201906968909 * r * P
+    return P

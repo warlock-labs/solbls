@@ -7,7 +7,7 @@ num_points = 1000
 points = {
     "G1_signatures": [],
     "G2_public_keys": [],
-    "E2_non_G2": [],
+    "bad_G2_public_keys": [],
     "private_keys": [],
     "svdw": []
 }
@@ -21,8 +21,8 @@ for _ in range(num_points):
     points["G2_public_keys"].append(point_to_json(public_key))
 
     # E2 point not in G2
-    P_non_G2 = generate_non_r_torsion_point()
-    points["E2_non_G2"].append(point_to_json(P_non_G2))
+    P_non_G2 = generate_non_r_torsion_point()*private_key
+    points["bad_G2_public_keys"].append(point_to_json(P_non_G2))
  
 cofactor_g1, cofactor_g2 = attack_risk(E1, E2, r)
 

@@ -74,7 +74,7 @@ const reference_data = JSON.parse(
 );
 const g1_points = reference_data.G1_signatures.map(convertG1Point);
 const g2_points = reference_data.G2_public_keys.map(convertG2Point);
-const e2_non_g2_points = reference_data.E2_non_G2.map(convertG2Point);
+const bad_g2_points = reference_data.bad_G2_public_keys.map(convertG2Point);
 const svdw_points = reference_data.svdw.map(convertSVDW);
 const domain = "BLS_SIG_BN254G1_XMD:KECCAK-256_SSWU_RO_NUL_";
 
@@ -143,7 +143,7 @@ describe("BLS", function () {
 
     const receipt = await bls.deploymentTransaction()?.wait();
     const cost = receipt?.gasUsed! * receipt?.gasPrice!;
-    deployment_costs.push(cost);
+    deployment_costs.push(BigInt(cost));
   });
 
   this.afterAll(async function () {
@@ -229,7 +229,7 @@ describe("BLS", function () {
   });
   it("Check that E'(Fp2) reference points that are not in the r-torsion are correctly rejected from G2", async function () {
     await Promise.all(
-      e2_non_g2_points.map(async (point: [bigint, bigint, bigint, bigint]) => {
+      bad_g2_points.map(async (point: [bigint, bigint, bigint, bigint]) => {
         const txo = await bls.isValidPublicKey.populateTransaction(point);
         const [response, cost] = await send_and_get_cost_from_tx(txo);
         const is_valid_pubkey = Boolean(
@@ -311,7 +311,7 @@ describe("BLS", function () {
 
     await Promise.all(
       g1_points.map(async (signature: [bigint, bigint], index: number) => {
-        const pub_key = e2_non_g2_points[index];
+        const pub_key = bad_g2_points[index];
         const is_valid_pubkey = await bls.isValidPublicKey(pub_key);
         const is_valid_sig = await bls.isValidSignature(signature);
         expect(is_valid_pubkey).to.be.true;
