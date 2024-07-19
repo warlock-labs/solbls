@@ -2,6 +2,7 @@ pragma solidity ^0.8;
 import "forge-std/Test.sol";
 import "forge-std/console2.sol";
 import "./Strings.sol";
+import "./BigNumber.sol";
 
 // This is a Foundry contract written in Solidity, to test
 // the BLS.sol library, via the the test contract of test_suite.sol
@@ -32,7 +33,6 @@ contract test_suiteTest is Test
         uint256 x;
         uint256 y;
     }
-
 
     struct G2PubKeys
     {
@@ -71,8 +71,9 @@ contract test_suiteTest is Test
     bytes[] randByteTests;
     uint256 zero = 0;
     uint64 zeroSixFour = 0;
+    string domain = "BLS_SIG_BN254G1_XMD:KECCAK-256_SSWU_RO_NUL_";
     bytes zpad = abi.encodePacked(abi.encodePacked(zero, zero, zero, zero), zeroSixFour);
-    uint256 field_order = 0x30644e72e131a029b85045b68181585d97816a916871ca8d3c208c16d87cfd47;
+    bytes field_order = hex"30644e72e131a029b85045b68181585d97816a916871ca8d3c208c16d87cfd47";
     //BLSTest bls = BLSTest(address(BLSTest));
     string json = vm.readFile("/Users/mitch/Desktop/solBlsTest/blsTest/test/bn254_reference_transformed.json");
     uint256[] private_keys = vm.parseJsonUintArray(json, ".private_keys");
@@ -100,7 +101,7 @@ contract test_suiteTest is Test
     //bytes rawG1 = vm.parseJson(json, ".G1_signatures[0]");
     //G1SigPair g1_signatures = abi.decode(rawG1, (G1SigPair));
     //JsonInputs jsonInput = abi.decode(data, (JsonInputs));
-    function testPrint() public view
+    /*function testPrint() public view
     {
         console.logBytes(randByteTests[0]);
         console.logBytes(randByteTests[1]);
@@ -113,41 +114,82 @@ contract test_suiteTest is Test
         console.log(g1_signatures[54][0],g1_signatures[54][1]);
         console.log(g2_public_keys[54][0],g2_public_keys[54][1],g2_public_keys[54][2],g2_public_keys[54][3]);
         console.log(e2_non_g2[54][0],e2_non_g2[54][1],e2_non_g2[54][2],e2_non_g2[54][3]);
-        console.log(svdw[54][0],svdw[54][1],svdw[54][2]);*/
+        console.log(svdw[54][0],svdw[54][1],svdw[54][2]);
         //console.log(jsonInput.svdw[0]);
-    }
+    }*/
 
-    function testExpand_Message() public view
+    /*function testExpand_Message() public view
     {
-        uint256 outputLen = 96;
-        uint256 domainLength = 43;
-        uint256 one = 1;
+        uint8 outputLen = 96;
+        uint8 domainLength = 43;
+        //console2.logBytes(msgData);
+        console2.logBytes(randByteTests[0]);
         string memory domain = "BLS_SIG_BN254G1_XMD:KECCAK-256_SSWU_RO_NUL_";
-        bytes memory b_0 = abi.encodePacked(zpad,randByteTests[0],outputLen >> 8,outputLen & 255, zero,domain,domainLength);
+        bytes memory b_0 = abi.encodePacked(zpad,randByteTests[0],uint8(outputLen >> 8),uint8(outputLen & 255), uint8(0),bytes(domain),domainLength);
+        console2.logBytes(b_0);
         bytes32 b_0_hashed = keccak256(b_0);
-        console.logBytes32(b_0_hashed);
-        bytes memory b_i = abi.encodePacked(b_0_hashed,one,domain,domainLength);
+        console2.logBytes32(b_0_hashed);
+        bytes memory b_i = abi.encodePacked(b_0_hashed,uint8(1),bytes(domain),domainLength);
         bytes32 b_i_hashed = keccak256(b_i);
-        console.logBytes32(b_i_hashed);
+        console2.logBytes32(b_i_hashed);
+        bytes memory newb_i = abi.encodePacked(b_i_hashed ^ b_0_hashed, uint8(2), bytes(domain),domainLength);
+        bytes32 newHash =keccak256(newb_i);
+        bytes memory newb_ii = abi.encodePacked(newHash ^ b_0_hashed, uint8(3), bytes(domain),domainLength);
+        bytes32 secondHash = keccak256(newb_ii);
+        console.logBytes(abi.encodePacked(b_i_hashed,newHash,secondHash));
         // copy first 32 bytes of b_i_hashed into a 96 byte array three times, then return array
         // return out
-    }
-    function hash_to_field(bytes[] message) public pure
+    }*/
+    function expand_message(bytes memory message) private view returns (bytes memory)
     {
-        uint256 count = 2;
-        uint256 L = 48;
-        uint lenInBytes = 96;
-        bytes[] expanded = expand_message(message);
-        uint256 resOne = expanded[0:48] % field_order;
-        uint resTwo = expanded[48:] % field_order;
-        return [resOne, resTwo];
-        for (let i = 0; i < count; i++)
+        uint8 outputLen = 96;
+        uint8 domainLength = 43;
+        //console2.logBytes(msgData);
+        console2.logBytes(message);
+        bytes memory b_0 = abi.encodePacked(zpad,message,uint8(outputLen >> 8),uint8(outputLen & 255), uint8(0),bytes(domain),domainLength);
+        console2.logBytes(b_0);
+        bytes32 b_0_hashed = keccak256(b_0);
+        console2.logBytes32(b_0_hashed);
+        bytes memory b_i = abi.encodePacked(b_0_hashed,uint8(1),bytes(domain),domainLength);
+        bytes32 b_i_hashed = keccak256(b_i);
+        console2.logBytes32(b_i_hashed);
+        bytes memory newb_i = abi.encodePacked(b_i_hashed ^ b_0_hashed, uint8(2), bytes(domain),domainLength);
+        bytes32 newHash =keccak256(newb_i);
+        bytes memory newb_ii = abi.encodePacked(newHash ^ b_0_hashed, uint8(3), bytes(domain),domainLength);
+        bytes32 secondHash = keccak256(newb_ii);
+        console.logBytes(abi.encodePacked(b_i_hashed,newHash,secondHash));
+        return abi.encodePacked(b_i_hashed,newHash,secondHash);
+    }
+    function testHash_to_field() public view
+    {
+        bytes memory expanded = expand_message(randByteTests[0]);
+        bytes memory ord = hex"30644e72e131a029b85045b68181585d97816a916871ca8d3c208c16d87cfd47";
+        bytes memory left = new bytes(48);
+        for (uint i = 0; i < 48; i++)
+        {
+          left[i] = expanded[i];
+        }
+        bytes memory right = new bytes(48);
+        for (uint l = 0; l < 48; l++)
+        {
+          right[l] = expanded[l + 48];
+        }
+        BigNumber memory leftBig = BigNumbers.init(left, false);
+        BigNumber memory rightBig = BigNumbers.init(right, false);
+        BigNumber memory fieldOrder = BigNumbers.init(ord, false);
+        console.logBytes(left);
+        console.logBytes(right);
+        BigNumber memory resOne = BigNumbers.mod(leftBig,fieldOrder);
+        BigNumber memory resTwo = BigNumbers.mod(rightBig,fieldOrder);
+        console.logBytes(resOne.val);
+        console.logBytes(resTwo.val);
+        /*for (let i = 0; i < count; i++)
         {
             
-        }
+        }*/
 
     }
-    function testG1() public
+    /*function testG1() public
     {
         for(uint256 i = 0; i < 1000; i++)
         {
@@ -215,7 +257,7 @@ contract test_suiteTest is Test
                 assert(pairingSuccess);
             }
         }
-    }
+    }*/
     // The next step is to implement hash_to_field and expand_message from
     // utils.ts
 
@@ -239,6 +281,5 @@ contract test_suiteTest is Test
 
     // That just involves feeding our SAGE-generated JSON into the contracts
     // and correctly getting TRUE or FALSE
-
 
 }
