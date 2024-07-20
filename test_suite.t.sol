@@ -25,8 +25,6 @@ import "../src/test_suite.sol";
 // by default. Fortunately, Foundry exposes a parseJSON() set of
 // functions, to effectively read and feed these into the contract.
 
-// TODO(COST FUNCTIONS + HASH_TO_FIELD_TESTER())
-
 /*
 struct G1SigPair
 {
