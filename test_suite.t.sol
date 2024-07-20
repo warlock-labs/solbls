@@ -3,6 +3,8 @@ import "forge-std/Test.sol";
 import "forge-std/console2.sol";
 import "./Strings.sol";
 import "./BigNumber.sol";
+import {BLS} from "../src/BLS.sol";
+import "../src/test_suite.sol";
 
 // This is a Foundry contract written in Solidity, to test
 // the BLS.sol library, via the the test contract of test_suite.sol
@@ -25,65 +27,67 @@ import "./BigNumber.sol";
 
 // TODO(COST FUNCTIONS + HASH_TO_FIELD_TESTER())
 
+/*
+struct G1SigPair
+{
+    uint256 x;
+    uint256 y;
+}
+
+struct G2PubKeys
+{
+    uint256 x_c0;
+    uint256 x_c1;
+    uint256 y_c0;
+    uint256 y_c1;
+}
+
+struct E2_non_G2
+{
+    uint256 x_c0;
+    uint256 x_c1;
+    uint256 y_c0;
+    uint256 y_c1;
+}
+
+struct SVDW
+{
+    uint256 i;
+    uint256 x;
+    uint256 y;
+}
+struct JsonInputs
+{
+    uint256[][] e2_non_g2;
+    uint256[][] g1_signatures;
+    uint256[][] g2_public_keys;
+    uint256[][] private_keys;
+    uint256[][] svdw;
+}
+*/
 
 contract test_suiteTest is Test
 {
-    struct G1SigPair
-    {
-        uint256 x;
-        uint256 y;
-    }
-
-    struct G2PubKeys
-    {
-        uint256 x_c0;
-        uint256 x_c1;
-        uint256 y_c0;
-        uint256 y_c1;
-    }
-
-    struct E2_non_G2
-    {
-        uint256 x_c0;
-        uint256 x_c1;
-        uint256 y_c0;
-        uint256 y_c1;
-    }
-
-    struct SVDW
-    {
-        uint256 i;
-        uint256 x;
-        uint256 y;
-    }
-    struct JsonInputs
-    {
-        uint256[][] e2_non_g2;
-        uint256[][] g1_signatures;
-        uint256[][] g2_public_keys;
-        uint256[][] private_keys;
-        uint256[][] svdw;
-    }
     uint256[][] e2_non_g2;
     uint256[][] g1_signatures;
     uint256[][] g2_public_keys;
     uint256[][] svdw;
-    bytes[] randByteTests;
+    //bytes[] randByteTests;
     uint256 zero = 0;
     uint64 zeroSixFour = 0;
     string domain = "BLS_SIG_BN254G1_XMD:KECCAK-256_SSWU_RO_NUL_";
     bytes zpad = abi.encodePacked(abi.encodePacked(zero, zero, zero, zero), zeroSixFour);
     bytes field_order = hex"30644e72e131a029b85045b68181585d97816a916871ca8d3c208c16d87cfd47";
-    //BLSTest bls = BLSTest(address(BLSTest));
+    BLSTest bls = new BLSTest();
     string json = vm.readFile("/Users/mitch/Desktop/solBlsTest/blsTest/test/bn254_reference_transformed.json");
     uint256[] private_keys = vm.parseJsonUintArray(json, ".private_keys");
-    string jsonTwo = vm.readFile("/Users/mitch/Desktop/solBlsTest/blsTest/test/json3.json");
+    // string jsonTwo = vm.readFile("/Users/mitch/Desktop/solBlsTest/blsTest/test/json3.json");
     function setUp() noGasMetering public
     {
-        string memory left = string.concat(".", Strings.toString(10));
+        /*string memory left = string.concat(".", Strings.toString(10));
         string memory lookup = string.concat(left, "");
-        randByteTests = vm.parseJsonBytesArray(jsonTwo, lookup);
-        /*for(uint256 i = 0; i < 1000; i++)
+        randByteTests = vm.parseJsonBytesArray(jsonTwo, lookup);*/
+        for(uint256 i = 0; i < 1000; i++)
         {
             string memory strNum = Strings.toString(i);
             string memory left = string.concat("[", strNum);
@@ -96,7 +100,7 @@ contract test_suiteTest is Test
             g2_public_keys.push(rawG2);
             e2_non_g2.push(rawE2);
             svdw.push(rawSVDW);
-        }*/
+        }
     }
     //bytes rawG1 = vm.parseJson(json, ".G1_signatures[0]");
     //G1SigPair g1_signatures = abi.decode(rawG1, (G1SigPair));
@@ -160,9 +164,9 @@ contract test_suiteTest is Test
         console.logBytes(abi.encodePacked(b_i_hashed,newHash,secondHash));
         return abi.encodePacked(b_i_hashed,newHash,secondHash);
     }
-    function testHash_to_field() public view
+    function testHash_to_field(bytes memory rands) public view
     {
-        bytes memory expanded = expand_message(randByteTests[0]);
+        bytes memory expanded = expand_message(rands);
         bytes memory ord = hex"30644e72e131a029b85045b68181585d97816a916871ca8d3c208c16d87cfd47";
         bytes memory left = new bytes(48);
         for (uint i = 0; i < 48; i++)
@@ -183,81 +187,82 @@ contract test_suiteTest is Test
         BigNumber memory resTwo = BigNumbers.mod(rightBig,fieldOrder);
         console.logBytes(resOne.val);
         console.logBytes(resTwo.val);
-        /*for (let i = 0; i < count; i++)
-        {
-            
-        }*/
-
     }
-    /*function testG1() public
+    function testG1() public noGasMetering
     {
         for(uint256 i = 0; i < 1000; i++)
         {
-            uint[] iq = g1_signatures[i];
-            assert(bls.isValidSignature(iq[0], iq[1]));
+            uint[] memory iq = g1_signatures[i];
+            uint[2] memory iqOw = [iq[0], iq[1]];
+            assert(bls.isValidSignature(iqOw));
         }
     }
-    function testG2() public
+    function testG2() public noGasMetering
     {
         for(uint256 i = 0; i < 1000; i++)
         {
-            uint[] iq = g2_public_keys[i];
-            assert(bls.isValidPublicKey(iq[0], iq[1], iq[2], iq[3]));
+            uint[] memory iq = g2_public_keys[i];
+            uint[4] memory iqOw = [iq[0], iq[1], iq[2], iq[3]];
+            assert(bls.isValidPublicKey(iqOw));
         }
     }
-    function testE2noG2() public
+    function testE2noG2() public noGasMetering
     {
         for(uint256 i = 0; i < 1000; i++)
         {
-            uint[] iq = e2_non_g2[i];
-            assert(!bls.isValidPublicKey(iq[0], iq[1], iq[2], iq[3]));
+            uint[] memory iq = e2_non_g2[i];
+            uint[4] memory iqOw = [iq[0], iq[1], iq[2], iq[3]];
+            assert(bls.isValidPublicKey(iqOw) == false);
         }
     }
-    function testSVDW() public
+    function testSVDW() public noGasMetering
     {
         for(uint256 i = 0; i < 1000; i++)
         {
-            uint256[] iq = svdw[i];
-            (uint256 targetOne, uint256 targetTwo) = bls.mapToPoint(iq[0]);
-            uint256[2] targets = [targetOne,targetTwo];
+            uint256[] memory iq = svdw[i];
+            uint256[2] memory targets = bls.mapToPoint(iq[0]);
             assert(bls.isOnCurveG1(targets));
-            assert(targetOne == iq[1]);
-            assert(targetTwo == iq[2]);
+            assert(targets[0] == iq[1]);
+            assert(targets[1] == iq[2]);
         }
     }
-    function testLibraryConsistent() public
+    function testLibraryConsistent() public noGasMetering
     {
-        uint256[2] pt = bls.hashToPoint((bytes32) domain, (bytes32) "Hello World!");
+        uint256[2] memory pt = bls.hashToPoint(bytes(domain), bytes("Hello World!"));
         assert(bls.isOnCurveG1(pt));
         for(uint256 i = 0; i < 1000; i++)
         {
-            uint[] iq = g1_signatures[i];
-            uint[] iqTwo = g2_public_keys[i];
-            assert(bls.isValidPublicKey(iqTwo));
-            assert(bls.isValidSignature(iq[0], iq[1]));
-            (bool pairingSuccess, bool callSuccess) = bls.verifySingle(iq,iqTwo,pt);
+            uint[] memory iq = g1_signatures[i];
+            uint[] memory iqTwo = g2_public_keys[i];
+            uint[2] memory iqOw = [iq[0], iq[1]];
+            uint[4] memory iqTwoOw = [iqTwo[0], iqTwo[1], iqTwo[2], iqTwo[3]];
+            assert(bls.isValidPublicKey(iqTwoOw));
+            assert(bls.isValidSignature(iqOw));
+            (bool pairingSuccess, bool callSuccess) = bls.verifySingle(iqOw,iqTwoOw,pt);
             if(callSuccess)
             {
                 assert(pairingSuccess);
             }
         }
     }
-    function testLibConsistentTwo()
+    function testLibConsistentTwo() public noGasMetering
     {
-        // Should fail
+        uint256[2] memory pt = bls.hashToPoint(bytes(domain), bytes("Hello world!"));
         for(uint256 i = 0; i < 1000; i++)
         {
-            uint[] iq = g1_signatures[i];
-            uint[] iqTwo = e2_non_g2[i];
-            assert(bls.isValidPublicKey(iqTwo));
-            assert(bls.isValidSignature(iq[0], iq[1]));
-            (bool pairingSuccess, bool callSuccess) = bls.verifySingle(iq,iqTwo,pt);
+            uint[] memory iq = g1_signatures[i];
+            uint[] memory iqTwo = e2_non_g2[i];
+            uint[2] memory iqOw = [iq[0], iq[1]];
+            uint[4] memory iqTwoOw = [iqTwo[0], iqTwo[1], iqTwo[2], iqTwo[3]];
+            assert(bls.isValidPublicKey(iqTwoOw));
+            assert(bls.isValidSignature(iqOw));
+            (bool pairingSuccess, bool callSuccess) = bls.verifySingle(iqOw,iqTwoOw,pt);
             if(callSuccess)
             {
                 assert(pairingSuccess);
             }
         }
-    }*/
+    }
     // The next step is to implement hash_to_field and expand_message from
     // utils.ts
 
