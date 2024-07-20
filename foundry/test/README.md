@@ -8,7 +8,7 @@ instead of Typescript.
 In its current iteration, it fails assertion tests in `testLibraryConsistent()`, the
 second that it sees `G2_public_key[0]`.
 
-This is concerning, I think, because `testLibConsistent2()` uses an identical algorithm
+This is concerning, I think, because `testLibConsistentTwo()` uses an identical algorithm
 over the `e2_non_g2`, and behaves correctly.
 
 All other tests provide the expected behavior.
