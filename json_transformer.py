@@ -19,3 +19,4 @@ for field in list(testData.keys()):
 			simplifiedField.append(objPair)
 	testDataThree[field] = simplifiedField
 print(testDataThree)
+# transforms bn254_reference into bn254_reference_transform (removes strings, which solidity has trouble with)
