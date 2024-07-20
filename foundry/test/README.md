@@ -8,6 +8,9 @@ instead of Typescript.
 In its current iteration, it fails assertion tests in `testLibraryConsistent()`, the
 second that it sees `G2_public_key[0]`.
 
+Specifically, the `bls.verifySingle()` call returns two `bool`, `pairingSuccess` and `callingSuccess`.
+This version fails to accept a `pairingSuccess` assertion.
+
 This is concerning, I think, because `testLibConsistentTwo()` uses an identical algorithm
 over the `e2_non_g2`, and behaves correctly.
 
