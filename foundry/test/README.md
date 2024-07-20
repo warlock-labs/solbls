@@ -1,4 +1,4 @@
-### FOUNDRY RE-WRITE OF SolBLS Tests
+### Foundry Re-write Of SolBLS Tests
 This section of the repo contains a Foundry re-write of the `BLS.ts`
 hardhat script.
 
