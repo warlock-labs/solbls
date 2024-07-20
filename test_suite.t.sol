@@ -122,14 +122,14 @@ contract test_suiteTest is Test
         //console.log(jsonInput.svdw[0]);
     }*/
 
-    /*function testExpand_Message() public view
+    function testExpand_Message(bytes memory expMsg) public view
     {
         uint8 outputLen = 96;
         uint8 domainLength = 43;
         //console2.logBytes(msgData);
-        console2.logBytes(randByteTests[0]);
-        string memory domain = "BLS_SIG_BN254G1_XMD:KECCAK-256_SSWU_RO_NUL_";
-        bytes memory b_0 = abi.encodePacked(zpad,randByteTests[0],uint8(outputLen >> 8),uint8(outputLen & 255), uint8(0),bytes(domain),domainLength);
+        console2.logBytes(expMsg);
+        //string memory domain = "BLS_SIG_BN254G1_XMD:KECCAK-256_SSWU_RO_NUL_";
+        bytes memory b_0 = abi.encodePacked(zpad,expMsg,uint8(outputLen >> 8),uint8(outputLen & 255), uint8(0),bytes(domain),domainLength);
         console2.logBytes(b_0);
         bytes32 b_0_hashed = keccak256(b_0);
         console2.logBytes32(b_0_hashed);
@@ -141,9 +141,10 @@ contract test_suiteTest is Test
         bytes memory newb_ii = abi.encodePacked(newHash ^ b_0_hashed, uint8(3), bytes(domain),domainLength);
         bytes32 secondHash = keccak256(newb_ii);
         console.logBytes(abi.encodePacked(b_i_hashed,newHash,secondHash));
+        assert(keccak256(bls.expandMsgTo96(bytes(domain), expMsg)) == keccak256(abi.encodePacked(b_i_hashed,newHash,secondHash)));
         // copy first 32 bytes of b_i_hashed into a 96 byte array three times, then return array
         // return out
-    }*/
+    }
     function expand_message(bytes memory message) private view returns (bytes memory)
     {
         uint8 outputLen = 96;
@@ -187,6 +188,9 @@ contract test_suiteTest is Test
         BigNumber memory resTwo = BigNumbers.mod(rightBig,fieldOrder);
         console.logBytes(resOne.val);
         console.logBytes(resTwo.val);
+        uint256[2] memory p = bls.hashToField(bytes(domain), rands);
+        assert(keccak256(abi.encodePacked(p[0])) == keccak256(resOne.val));
+        assert(keccak256(abi.encodePacked(p[1])) == keccak256(resTwo.val));
     }
     function testG1() public noGasMetering
     {
