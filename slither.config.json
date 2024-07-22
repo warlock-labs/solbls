@@ -1,0 +1,11 @@
+{
+  "filter_paths": "lib",
+  "solc_args": "optimize",
+  "solc_remaps": [
+    "forge-std/=lib/forge-std/src/",
+    "solady/=lib/solady/src/"
+  ],
+  "ignore_compile": true,
+  "fail_on": "high",
+  "skip_assembly": true
+}
