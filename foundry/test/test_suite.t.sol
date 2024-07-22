@@ -185,7 +185,7 @@ contract test_suiteTest is Test
         }
         returns [false, true] from verifySingle()
         */
-        uint256[2] memory pt = bls.hashToPoint(bytes(domain), bytes("Hello World!"));
+        uint256[2] memory pt = bls.hashToPoint(bytes(domain), bytes("Hello world!"));
         assert(bls.isOnCurveG1(pt));
         for(uint256 i = 0; i < 1000; i++)
         {
