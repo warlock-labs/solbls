@@ -200,6 +200,10 @@ contract test_suiteTest is Test
             {
                 assert(pairingSuccess);
             }
+            else
+            {
+                assert(pairingSuccess==false);
+            }
         }
     }
     function testLibConsistentTwo() public noGasMetering
@@ -219,6 +223,10 @@ contract test_suiteTest is Test
             if(callSuccess)
             {
                 assert(pairingSuccess);
+            }
+            else
+            {
+                assert(pairingSuccess==false);
             }
         }
     }
