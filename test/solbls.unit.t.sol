@@ -8,7 +8,7 @@ import {BLS} from "../src/BLS.sol";
 import "./solbls.test.sol";
 
 // This is a Foundry contract written in Solidity, to test
-// the BLS.sol library, via the the test contract of test_suite.sol
+// the BLS.sol library, via the the test contract of solbls.test.sol
 
 // Many of the test cases are pulled from bn254_reference_transformed.json, generated using SAGE MATH
 
