@@ -1,0 +1,69 @@
+name: CI Pipeline
+
+on:
+  push:
+    branches:
+      - '*'
+  pull_request:
+    branches:
+      - '**'
+
+env:
+  FOUNDRY_PROFILE: ci
+
+jobs:
+  run-tests:
+    name: Run Tests
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: true
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          submodules: recursive
+
+      - name: Install Foundry
+        uses: foundry-rs/foundry-toolchain@v1
+
+      - name: Lint code
+        run: forge fmt --check
+        id: lint
+
+      - name: Run tests
+        run: forge test -vvv
+        id: test
+
+      - name: Generate coverage report
+        run: forge coverage --report summary --report lcov
+        id: coverage
+
+      - uses: codecov/codecov-action@v4
+        with:
+          files: lcov.info
+          token: ${{ secrets.CODECOV_TOKEN }}
+
+      # Right now these gas snapshots are non-deterministic across different machines
+      #- name: Check gas snapshots
+      #  run: forge snapshot --check
+      #  id: gas
+
+  static-analysis:
+    name: Run Slither Static Analysis
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          submodules: recursive
+
+      - name: Install Foundry
+        uses: foundry-rs/foundry-toolchain@v1
+
+      - name: Build
+        run: forge build --extra-output abi --extra-output userdoc --extra-output devdoc --extra-output evm.methodIdentifiers --build-info --skip */test/** */script/**
+
+      - name: Run Slither analysis
+        uses: crytic/slither-action@v0.4.0
+        with:
+          slither-config: slither.config.json
