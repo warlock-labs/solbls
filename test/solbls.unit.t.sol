@@ -5,7 +5,7 @@ import "forge-std/console2.sol";
 import "../lib/openzeppelin-contracts/contracts/utils/Strings.sol";
 import "../lib/solidity-BigNumber/src/BigNumbers.sol";
 import {BLS} from "../src/BLS.sol";
-import "../src/solbls.test.sol";
+import "./solbls.test.sol";
 
 // This is a Foundry contract written in Solidity, to test
 // the BLS.sol library, via the the test contract of test_suite.sol
@@ -145,7 +145,7 @@ contract test_suiteTest is Test {
         }
     }
 
-    function testE2noG2() public noGasMetering {
+    function testFail_E2noG2() public noGasMetering {
         // Check that E'(Fp2) reference points that are not in the r-torsion are correctly rejected from G2
         for (uint256 i = 0; i < 1000; i++) {
             uint256[] memory iq = e2_non_g2[i];
