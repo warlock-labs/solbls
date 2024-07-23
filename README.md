@@ -40,7 +40,7 @@ Further, while being relatively safe on BN254, $\mathbb{G} _2$ operations, inclu
 
 ### Test results
 
-The following hashing utility functions of the library are compared against implementations written in TSX:
+The following hashing utility functions of the library are compared against implementations written in Foundry:
 
 - `expandMsgTo96`: this hashes a bytestring to an element of the desired base field
 - `hashToField`: this takes a bytestring and returns a pair of elements in the base field
