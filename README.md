@@ -65,7 +65,7 @@ cd test/sage_reference
 make
 sage generate_refs.sage
 ```
-which outputs the data into `bn254_reference.json`. 
+which outputs the data into `bn254_reference_transformed.json`. 
 
 To conduct the tests, in the home directory, simply execute:
 
