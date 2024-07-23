@@ -42,6 +42,8 @@ contract BLSUnitTest is Test {
     string json = vm.readFile(string.concat(root, "/test/bn254_reference_transformed.json"));
     uint256[] private_keys = vm.parseJsonUintArray(json, ".private_keys");
 
+    // Gas metering must be turned off for uint256[][] tests and setUp to run without reverting
+
     function setUp() public noGasMetering {
         for (uint256 i = 0; i < 1000; i++) {
             string memory strNum = vm.toString(i);
