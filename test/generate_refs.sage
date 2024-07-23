@@ -1,6 +1,7 @@
 from sagelib.utils import *
 from sagelib.svdw import generic_svdw
 from sagelib.small_subgroup import attack_risk
+import json
 
 # Generate random points
 num_points = 1000
@@ -38,9 +39,6 @@ for _ in range(num_points):
         points["svdw"].append({
             "i" : str(u),
             **point_to_json(E1(x,y))})
-# import json
-# with open('bn254_reference.json', 'w') as f:
-#    f.write(json.dumps(points,indent=2))
 
 pointsTwo = {'private_keys': points['private_keys']}
 for field in list(points.keys()):
