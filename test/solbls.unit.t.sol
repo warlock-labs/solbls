@@ -38,7 +38,7 @@ contract BLSUnitTest is Test {
 
     // Test Case Read
     string root = vm.projectRoot();
-    string json = vm.readFile(string.concat(root, "/test/bn254_reference_transformed.json"));
+    string json = vm.readFile(string.concat(root, "/test/sage_reference/bn254_reference_transformed.json"));
     uint256[] private_keys = vm.parseJsonUintArray(json, ".private_keys");
 
     // Gas metering must be turned off for uint256[][] tests and setUp to run without reverting
