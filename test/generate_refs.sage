@@ -59,4 +59,4 @@ for field in list(points.keys()):
 					objPair.append(int(value))
 			simplifiedField.append(objPair)
 	pointsTwo[field] = simplifiedField
-print(json.dumps(testDataTwo))
+print(json.dumps(pointsTwo))
