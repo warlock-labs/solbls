@@ -70,15 +70,10 @@ which outputs the data into `bn254_reference.json`.
 To conduct the tests, in the home directory, simply execute:
 
 ```bash
-npm i --force
-npx hardhat compile 
-npx hardhat test
+forge test -vvv
 ```
 
 ---
-
-The tests also measure the gas per method call from the contract. From a black box perspective, the hash functions especially should run constant time, which we verify with the low variation across the costs for messages of varying byte lengths. All tests have low variation across inputs, and the most expensive is (understandably) the final exponentiation / pairing step at the end which verifies signatures.
-
 All tests pass, except the subgroup membership checks, which is to be expected. Units are gwei.
 
 ![test results](/test/test_results.png)
