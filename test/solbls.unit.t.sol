@@ -34,7 +34,6 @@ contract BLSUnitTest is Test {
     uint256 zero = 0;
     string domain = "BLS_SIG_BN254G1_XMD:KECCAK-256_SSWU_RO_NUL_";
     bytes zpad = abi.encodePacked(abi.encodePacked(zero, zero, zero, zero), uint64(0));
-    bytes field_order = hex"30644e72e131a029b85045b68181585d97816a916871ca8d3c208c16d87cfd47";
     // BLSTest bls = new BLSTest();
 
     // Test Case Read
