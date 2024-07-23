@@ -74,7 +74,7 @@ forge test -vvv
 ```
 
 ---
-All tests pass, except the subgroup membership checks, which is to be expected. Units are gwei.
+All tests pass, except the subgroup membership checks, which is to be expected. Units are gwei. `testFail_E2noG2()` does not actually use that much gas. It fails instantly.
 
 ![test results](/test/test_results.png)
 
