@@ -24,7 +24,7 @@ import "./solbls.test.sol";
 // by default. Fortunately, Foundry exposes a parseJSON() set of
 // functions, to effectively read and feed these into the contract.
 
-contract test_suiteTest is Test {
+contract BLSUnitTest is Test {
     // EC Test Cases
     uint256[][] e2_non_g2;
     uint256[][] g1_signatures;
@@ -36,7 +36,7 @@ contract test_suiteTest is Test {
     string domain = "BLS_SIG_BN254G1_XMD:KECCAK-256_SSWU_RO_NUL_";
     bytes zpad = abi.encodePacked(abi.encodePacked(zero, zero, zero, zero), uint64(0));
     bytes field_order = hex"30644e72e131a029b85045b68181585d97816a916871ca8d3c208c16d87cfd47";
-    BLSTest bls = new BLSTest();
+    // BLSTest bls = new BLSTest();
 
     // Test Case Read
     string root = vm.projectRoot();
@@ -79,7 +79,7 @@ contract test_suiteTest is Test {
 
         // assert equivalence between our implementation and the library
         assert(
-            keccak256(bls.expandMsgTo96(bytes(domain), expMsg))
+            keccak256(BLS.expandMsgTo96(bytes(domain), expMsg))
                 == keccak256(abi.encodePacked(b_i_hashed, newHash, secondHash))
         );
     }
@@ -121,7 +121,7 @@ contract test_suiteTest is Test {
         BigNumber memory fieldOrder = BigNumbers.init(ord, false);
         BigNumber memory resOne = BigNumbers.mod(leftBig, fieldOrder);
         BigNumber memory resTwo = BigNumbers.mod(rightBig, fieldOrder);
-        uint256[2] memory p = bls.hashToField(bytes(domain), rands);
+        uint256[2] memory p = BLS.hashToField(bytes(domain), rands);
         assert(keccak256(abi.encodePacked(p[0])) == keccak256(resOne.val));
         assert(keccak256(abi.encodePacked(p[1])) == keccak256(resTwo.val));
     }
@@ -131,7 +131,7 @@ contract test_suiteTest is Test {
         for (uint256 i = 0; i < 1000; i++) {
             uint256[] memory iq = g1_signatures[i];
             uint256[2] memory iqOw = [iq[0], iq[1]];
-            assert(bls.isValidSignature(iqOw));
+            assert(BLS.isValidSignature(iqOw));
         }
     }
 
@@ -140,7 +140,7 @@ contract test_suiteTest is Test {
         for (uint256 i = 0; i < 1000; i++) {
             uint256[] memory iq = g2_public_keys[i];
             uint256[4] memory iqOw = [iq[0], iq[1], iq[2], iq[3]];
-            assert(bls.isValidPublicKey(iqOw));
+            assert(BLS.isValidPublicKey(iqOw));
         }
     }
 
@@ -149,7 +149,7 @@ contract test_suiteTest is Test {
         for (uint256 i = 0; i < 1000; i++) {
             uint256[] memory iq = e2_non_g2[i];
             uint256[4] memory iqOw = [iq[0], iq[1], iq[2], iq[3]];
-            assert(bls.isValidPublicKey(iqOw) == false);
+            assert(BLS.isValidPublicKey(iqOw) == false);
         }
     }
 
@@ -157,8 +157,8 @@ contract test_suiteTest is Test {
         // Verify SVDW implementation
         for (uint256 i = 0; i < 1000; i++) {
             uint256[] memory iq = svdw[i];
-            uint256[2] memory targets = bls.mapToPoint(iq[0]);
-            assert(bls.isOnCurveG1(targets));
+            uint256[2] memory targets = BLS.mapToPoint(iq[0]);
+            assert(BLS.isOnCurveG1(targets));
             assert(targets[0] == iq[1]);
             assert(targets[1] == iq[2]);
         }
@@ -166,16 +166,16 @@ contract test_suiteTest is Test {
 
     function testLibraryConsistent() public noGasMetering {
         // Check internal consistency of the library
-        uint256[2] memory pt = bls.hashToPoint(bytes(domain), bytes("Hello world!"));
-        assert(bls.isOnCurveG1(pt));
+        uint256[2] memory pt = BLS.hashToPoint(bytes(domain), bytes("Hello world!"));
+        assert(BLS.isOnCurveG1(pt));
         for (uint256 i = 0; i < 1000; i++) {
             uint256[] memory iq = g1_signatures[i];
             uint256[] memory iqTwo = g2_public_keys[i];
             uint256[2] memory iqOw = [iq[0], iq[1]];
             uint256[4] memory iqTwoOw = [iqTwo[0], iqTwo[1], iqTwo[2], iqTwo[3]];
-            assert(bls.isValidPublicKey(iqTwoOw));
-            assert(bls.isValidSignature(iqOw));
-            (bool pairingSuccess, bool callSuccess) = bls.verifySingle(iqOw, iqTwoOw, pt);
+            assert(BLS.isValidPublicKey(iqTwoOw));
+            assert(BLS.isValidSignature(iqOw));
+            (bool pairingSuccess, bool callSuccess) = BLS.verifySingle(iqOw, iqTwoOw, pt);
             if (callSuccess) {
                 assert(pairingSuccess);
             } else {
@@ -186,15 +186,15 @@ contract test_suiteTest is Test {
 
     function testLibConsistentTwo() public noGasMetering {
         // Check internal consistency of the library 2
-        uint256[2] memory pt = bls.hashToPoint(bytes(domain), bytes("Hello world!"));
+        uint256[2] memory pt = BLS.hashToPoint(bytes(domain), bytes("Hello world!"));
         for (uint256 i = 0; i < 1000; i++) {
             uint256[] memory iq = g1_signatures[i];
             uint256[] memory iqTwo = e2_non_g2[i];
             uint256[2] memory iqOw = [iq[0], iq[1]];
             uint256[4] memory iqTwoOw = [iqTwo[0], iqTwo[1], iqTwo[2], iqTwo[3]];
-            assert(bls.isValidPublicKey(iqTwoOw));
-            assert(bls.isValidSignature(iqOw));
-            (bool pairingSuccess, bool callSuccess) = bls.verifySingle(iqOw, iqTwoOw, pt);
+            assert(BLS.isValidPublicKey(iqTwoOw));
+            assert(BLS.isValidSignature(iqOw));
+            (bool pairingSuccess, bool callSuccess) = BLS.verifySingle(iqOw, iqTwoOw, pt);
             if (callSuccess) {
                 assert(pairingSuccess);
             } else {
