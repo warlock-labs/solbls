@@ -2,7 +2,6 @@ pragma solidity ^0.8;
 
 import "forge-std/Test.sol";
 import "forge-std/console2.sol";
-import "../lib/openzeppelin-contracts/contracts/utils/Strings.sol";
 import "../lib/solidity-BigNumber/src/BigNumbers.sol";
 import {BLS} from "../src/BLS.sol";
 import "./solbls.test.sol";
@@ -46,7 +45,7 @@ contract test_suiteTest is Test {
 
     function setUp() public noGasMetering {
         for (uint256 i = 0; i < 1000; i++) {
-            string memory strNum = Strings.toString(i);
+            string memory strNum = vm.toString(i);
             string memory left = string.concat("[", strNum);
             string memory lookup = string.concat(left, "]");
             uint256[] memory rawG1 = vm.parseJsonUintArray(json, string.concat(".G1_signatures", lookup));
