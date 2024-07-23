@@ -4,7 +4,6 @@ import "forge-std/Test.sol";
 import "forge-std/console2.sol";
 import "../lib/solidity-BigNumber/src/BigNumbers.sol";
 import {BLS} from "../src/BLS.sol";
-import "./solbls.test.sol";
 
 // This is a Foundry contract written in Solidity, to test
 // the BLS.sol library, via the the test contract of solbls.test.sol
