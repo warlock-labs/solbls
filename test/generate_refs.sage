@@ -59,4 +59,5 @@ for field in list(points.keys()):
 					objPair.append(int(value))
 			simplifiedField.append(objPair)
 	pointsTwo[field] = simplifiedField
-print(json.dumps(pointsTwo))
+with open('bn254_reference_transformed.json', 'w') as f:
+	f.write(json.dumps(pointsTwo,indent=2))
