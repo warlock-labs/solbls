@@ -17,7 +17,7 @@ This is a basic implementation of BN254 in Solidity. The library copied here is 
 - https://github.com/thehubbleproject/hubble-contracts
 
 
-All in all, the contract performs well according to [RFC 9380](https://datatracker.ietf.org/doc/html/rfc9380). It implements the recommended `expand_msg_xmd` algorithm for hashing a bytestring to an element of the field, and likewise hashing a bytestring to a pair of elements in the field. To convert these field elements to curve elements, it implements the Shallue-van de Woestijne-Ulas algorithm, which is constant time, and relatively cheap to execute on-chain.
+All in all, the contract performs well according to [RFC 9380](https://datatracker.ietf.org/doc/html/rfc9380). It implements the recommended `expand_msg_xmd` algorithm for hashing a bytestring to an element of the field, and likewise hashing a bytestring to a pair of elements in the field. To convert these field elements to curve elements, it implements the Shallue-van de Woestijne encoding, which is constant time, and relatively cheap to execute on-chain.
 
 This is a big difference from the other versions which implement either Fouque-Tibouchi (FT) or the try-and-increment / hash-and-pray. The problem with FT and hash-and-pray is the fact that they are not constant time algorithms, and each iteration is expensive enough so that a bad actor can produce a message that's too expensive to check on-chain. The Hubble project quantified the expense of these algorithms to be about ~30k gas. One of the most expensive steps in hash-and-pray is the sqrt step, which takes 14k gas alone by calling the modexp precompile. This is why all of these versions have ported a copy of the [ModExp.sol library](https://github.com/ChihChengLiang/modexp/blob/master/contracts/ModExp.sol), which reduces the gas used to about 7k gas. The current version using SvdW is constant-time, and reasonably cheap, at the cost of being difficult to implement.
 
@@ -34,9 +34,9 @@ which has the following factorization:
 ```
 10069 * 5864401 * 1875725156269 * 197620364512881247228717050342013327560683201906968909
 ```
-Notice that the smallest prime factor is "large" compared to the order of magnitude needed for the attack. Therefore, BN254 is relatively secuer against these subgroup attacks contingent on the lifetime of valid public keys.
+In this case, a false key would need to be of order 10069. The subgroup check, despite in not being explicitly implemented in the Solidity, is still caught eventually by the precompile at `0x08` which executes the pairing operation. The cryptography backend takes the bytes from Solidity, and after deserialization performs curve and subgroup membership checks, which then ultimately rejects malformed public keys. The reliance on the precompile to catch these malformed keys may, or may not, have been intentional from the original Solidity, but that is unclear at this time.
 
-Further, while being relatively safe on BN254, $\mathbb{G} _2$ operations, including twist operations, are extremely expensive to compute on chain, which is probably the bigger reason why they are not implemented. [Current versions](https://github.com/musalbas/solidity-BN256G2) report that the estimated gas for addition and multiplication in $\mathbb{G} _2$ are 30k gas, and 2M gas respectively (!).
+Further, while being relatively safe on BN254, $\mathbb{G} _2$ operations, including twist operations, are extremely expensive to compute on chain, which is probably the bigger reason why they are not implemented. [Current versions](https://github.com/musalbas/solidity-BN256G2) report that the estimated gas for addition and multiplication in $\mathbb{G} _2$ are 30k gas, and 2M gas respectively (!), so if nothing else, the subgroup checks were most likely cut for costs.
 
 ### Test results
 
@@ -46,7 +46,7 @@ The following hashing utility functions of the library are compared against impl
 - `hashToField`: this takes a bytestring and returns a pair of elements in the base field
     - each of these elements is then mapped to a point on the curve via SvdW, and then added to produce a hash on the curve
 
-The above tests check random messages of lengths ranging from 10 to 256 bytes. 
+The above tests check random messages of ranging lengths.
 
 ---
 
