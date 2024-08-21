@@ -37,6 +37,7 @@ which has the following factorization:
 ```
 10069 * 5864401 * 1875725156269 * 197620364512881247228717050342013327560683201906968909
 ```
+
 In this case, a false key would need to be of order 10069. The subgroup check, despite in not being explicitly implemented in the Solidity, is still caught eventually by the precompile at `0x08` which executes the pairing operation. The cryptography backend takes the bytes from Solidity, and after deserialization performs curve and subgroup membership checks, which then ultimately rejects malformed public keys. The reliance on the precompile to catch these malformed keys may, or may not, have been intentional from the original Solidity, but that is unclear at this time.
 
 Further, while being relatively safe on BN254, $\mathbb{G} _2$ operations, including twist operations, are extremely expensive to compute on chain, which is probably the bigger reason why they are not implemented. [Current versions](https://github.com/musalbas/solidity-BN256G2) report that the estimated gas for addition and multiplication in $\mathbb{G} _2$ are 30k gas, and 2M gas respectively (!), so if nothing else, the subgroup checks were most likely cut for costs.
