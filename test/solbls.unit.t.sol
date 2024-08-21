@@ -102,7 +102,7 @@ contract BLSUnitTest is Test {
     function testHash_to_field(bytes memory rands) public view {
         bytes memory expanded = expand_message(rands);
         bytes memory ord = hex"30644e72e131a029b85045b68181585d97816a916871ca8d3c208c16d87cfd47";
-        
+
         // Split the expanded message into two parts
         bytes memory left = new bytes(48);
         bytes memory right = new bytes(48);
@@ -110,14 +110,14 @@ contract BLSUnitTest is Test {
             left[i] = expanded[i];
             right[i] = expanded[i + 48];
         }
-        
+
         // Convert to BigNumbers and perform modular arithmetic
         BigNumber memory leftBig = BigNumbers.init(left, false);
         BigNumber memory rightBig = BigNumbers.init(right, false);
         BigNumber memory fieldOrder = BigNumbers.init(ord, false);
         BigNumber memory resOne = BigNumbers.mod(leftBig, fieldOrder);
         BigNumber memory resTwo = BigNumbers.mod(rightBig, fieldOrder);
-        
+
         // Compare results with BLS library implementation
         uint256[2] memory p = BLS.hashToField(bytes(domain), rands);
         assert(keccak256(abi.encodePacked(p[0])) == keccak256(resOne.val));
