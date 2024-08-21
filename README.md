@@ -1,4 +1,4 @@
-![alt text](solbls-1.png)
+![alt text](solbls.png)
 
 [![Github Actions][gha-badge]][gha] [![Foundry][foundry-badge]][foundry] [![License: BUSL 1.1][license-badge]][license]
 
