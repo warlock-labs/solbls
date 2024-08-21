@@ -1,4 +1,6 @@
-# Warlock Chaos Oracle [![Github Actions][gha-badge]][gha] [![Foundry][foundry-badge]][foundry] [![License: BUSL 1.1][license-badge]][license]
+![alt text](solbls-1.png)
+
+[![Github Actions][gha-badge]][gha] [![Foundry][foundry-badge]][foundry] [![License: BUSL 1.1][license-badge]][license]
 
 [gha]: https://github.com/warlock-labs/solbls/actions
 [gha-badge]: https://github.com/warlock-labs/solbls/actions/workflows/CI.yml/badge.svg
@@ -6,8 +8,6 @@
 [foundry-badge]: https://img.shields.io/badge/Built%20with-Foundry-FFDB1C.svg
 [license]: https://spdx.org/licenses/BUSL-1.1.html
 [license-badge]: https://img.shields.io/badge/License-BUSL%201.1-blue.svg
-
-# solbls
 
 This is a basic implementation of BN254 in Solidity. The library copied here is from [kevincharm](https://github.com/kevincharm/bls-bn254/tree/master)'s version, but actually this is a massive amalgamation of the following repos / exists in many versions, all of which seem to be based on [this article](https://ethresear.ch/t/bls-signatures-in-solidity/7919):
 
