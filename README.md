@@ -34,7 +34,7 @@ which has the following factorization:
 ```
 10069 * 5864401 * 1875725156269 * 197620364512881247228717050342013327560683201906968909
 ```
-Notice that the smallest prime factor is "large" compared to the order of magnitude needed for the attack. Therefore, BN254 is relatively secuer against these subgroup attacks contingent on the lifetime of valid public keys.
+Notice that the smallest prime factor is "large" compared to the order of magnitude needed for the attack. Therefore, BN254 is relatively secure against these subgroup attacks contingent on the lifetime of valid public keys.
 
 Further, while being relatively safe on BN254, $\mathbb{G} _2$ operations, including twist operations, are extremely expensive to compute on chain, which is probably the bigger reason why they are not implemented. [Current versions](https://github.com/musalbas/solidity-BN256G2) report that the estimated gas for addition and multiplication in $\mathbb{G} _2$ are 30k gas, and 2M gas respectively (!).
 
