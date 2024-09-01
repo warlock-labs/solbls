@@ -5,7 +5,7 @@
 [![Github Actions][gha-badge]][gha]
 [![Foundry][foundry-badge]][foundry]
 [![License: MIT][license-badge]][license]
-[![codecov](https://codecov.io/gh/warlock-labs/solbls/graph/badge.svg?token=MJNRUZHI1Z)](https://codecov.io/gh/warlock-labs/solbls)
+[![codecov](https://codecov.io/gh/warlock-labs/solbls/graph/badge.svg?token=7LHOYFAPA8)](https://codecov.io/gh/warlock-labs/solbls)
 [![standard-readme compliant](https://img.shields.io/badge/readme%20style-standard-brightgreen.svg?style=flat-square)](https://github.com/RichardLitt/standard-readme)
 
 A Solidity library for efficient BLS signature verification over the alt-bn128 curve, optimized for on-chain
