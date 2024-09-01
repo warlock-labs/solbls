@@ -89,6 +89,9 @@ Key security considerations:
 
 For more details on security considerations, please refer to the `audits` folder.
 
+There is a pending audit with Zellic, and for the moment, this library should be considered unaudited by
+an external party.
+
 ## Install
 
 This module depends on [Foundry](https://getfoundry.sh/). Make sure you have it installed before proceeding.
