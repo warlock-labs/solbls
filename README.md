@@ -11,40 +11,23 @@
 A Solidity library for efficient BLS signature verification over the alt-bn128 curve, optimized for on-chain
 verification.
 
-## Table of Contents
-
-- [Background](#background)
-- [Features](#features)
-- [Usage](#usage)
-- [Security](#security)
-- [Install](#install)
-- [API](#api)
-- [Testing](#testing)
-- [Benchmarks](#benchmarks)
-- [Versioning](#versioning)
-- [Maintainers](#maintainers)
-- [Contributing](#contributing)
-- [Support](#support)
-- [Changelog](#changelog)
-- [License](#license)
-
 ## Background
 
-This library implements BLS over the alt-bn128 curve in Solidity. SolBLS performs well,
+SolBLS implements BLS over the alt-bn128 curve in Solidity. It performs well,
 according to [RFC 9380](https://datatracker.ietf.org/doc/html/rfc9380).
 It implements the recommended `expand_msg_xmd` algorithm for hashing a bytestring to an element of
 the field, and likewise hashing a bytestring to a pair of elements in the field. To convert these
 field elements to curve elements, it implements the Shallue-van de Woestijne encoding, which is
 constant time and relatively economical to execute on-chain.
 
-It's meant primarily for on-chain verification of signed messages produced by [Sylow](https://github.com/warlock-labs/sylow),
+It's meant primarily for on-chain verification of signed messages produced
+by [Sylow](https://github.com/warlock-labs/sylow),
 for use in [Warlock](https://warlock.xyz)'s data feeds.
 
 It's an amalgamation of several repositories, all of which seem to be based
 on [this article](https://ethresear.ch/t/bls-signatures-in-solidity/7919).
 The library here is based upon [kevincharm](https://github.com/kevincharm/bls-bn254/tree/master)'s version, but actually
-this
-exists in many versions:
+this exists in many versions:
 
 - https://gist.github.com/kobigurk/257c1783ddf556e330f31ed57febc1d9
 - https://github.com/ralexstokes/deposit-verifier/blob/8da90a8f6fc686ab97506fd0d84568308b72f133/deposit_verifier.sol
@@ -160,7 +143,7 @@ We welcome contributions to solbls! Please follow these steps to contribute:
 5. Open a Pull Request
 
 Please make sure to update tests as appropriate and adhere to
-the [Solidity style guide](https://docs.soliditylang.org/en/v0.8.17/style-guide.html).
+the [Solidity style guide](https://docs.soliditylang.org/en/v0.8.26/style-guide.html).
 
 ## Support
 
