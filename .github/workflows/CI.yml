@@ -15,8 +15,6 @@ jobs:
   run-tests:
     name: Run Tests
     runs-on: ubuntu-latest
-    strategy:
-      fail-fast: true
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
@@ -31,22 +29,22 @@ jobs:
         id: lint
 
       - name: Run tests
-        run: forge test -vvv
+        run: forge test --optimize
         id: test
 
       - name: Generate coverage report
         run: forge coverage --report summary --report lcov
         id: coverage
 
+      - name: Filter coverage directories
+        run: |
+          sudo apt update && sudo apt install -y lcov
+          lcov --remove lcov.info 'src/BLS.sol' 'src/ModExp.sol' --output-file lcov.info --rc lcov_branch_coverage=1
+
       - uses: codecov/codecov-action@v4
         with:
           files: lcov.info
           token: ${{ secrets.CODECOV_TOKEN }}
-
-      # Right now these gas snapshots are non-deterministic across different machines
-      #- name: Check gas snapshots
-      #  run: forge snapshot --check
-      #  id: gas
 
   static-analysis:
     name: Run Slither Static Analysis

@@ -1,94 +1,187 @@
-![alt text](solbls.png)
+# solbls
 
-[![Github Actions][gha-badge]][gha] [![Foundry][foundry-badge]][foundry] [![License: BUSL 1.1][license-badge]][license]
+![solbls logo](solbls.png)
 
-[gha]: https://github.com/warlock-labs/solbls/actions
-[gha-badge]: https://github.com/warlock-labs/solbls/actions/workflows/CI.yml/badge.svg
-[foundry]: https://getfoundry.sh/
-[foundry-badge]: https://img.shields.io/badge/Built%20with-Foundry-FFDB1C.svg
-[license]: https://spdx.org/licenses/BUSL-1.1.html
-[license-badge]: https://img.shields.io/badge/License-BUSL%201.1-blue.svg
+[![Github Actions][gha-badge]][gha]
+[![Foundry][foundry-badge]][foundry]
+[![License: MIT][license-badge]][license]
+[![codecov](https://codecov.io/gh/warlock-labs/solbls/graph/badge.svg?token=MJNRUZHI1Z)](https://codecov.io/gh/warlock-labs/solbls)
+[![standard-readme compliant](https://img.shields.io/badge/readme%20style-standard-brightgreen.svg?style=flat-square)](https://github.com/RichardLitt/standard-readme)
 
-This is a basic implementation of BN254 in Solidity. The library copied here is from [kevincharm](https://github.com/kevincharm/bls-bn254/tree/master)'s version, but actually this is a massive amalgamation of the following repos / exists in many versions, all of which seem to be based on [this article](https://ethresear.ch/t/bls-signatures-in-solidity/7919):
+A Solidity library for efficient BLS signature verification over the alt-bn128 curve, optimized for on-chain
+verification.
+
+## Table of Contents
+
+- [Background](#background)
+- [Features](#features)
+- [Usage](#usage)
+- [Security](#security)
+- [Install](#install)
+- [API](#api)
+- [Testing](#testing)
+- [Benchmarks](#benchmarks)
+- [Versioning](#versioning)
+- [Maintainers](#maintainers)
+- [Contributing](#contributing)
+- [Support](#support)
+- [Changelog](#changelog)
+- [License](#license)
+
+## Background
+
+This library implements BLS over the alt-bn128 curve in Solidity. SolBLS performs well,
+according to [RFC 9380](https://datatracker.ietf.org/doc/html/rfc9380).
+It implements the recommended `expand_msg_xmd` algorithm for hashing a bytestring to an element of
+the field, and likewise hashing a bytestring to a pair of elements in the field. To convert these
+field elements to curve elements, it implements the Shallue-van de Woestijne encoding, which is
+constant time and relatively economical to execute on-chain.
+
+It's meant primarily for on-chain verification of signed messages produced by [Sylow](https://github.com/warlock-labs/sylow),
+for use in [Warlock](https://warlock.xyz)'s data feeds.
+
+It's an amalgamation of several repositories, all of which seem to be based
+on [this article](https://ethresear.ch/t/bls-signatures-in-solidity/7919).
+The library here is based upon [kevincharm](https://github.com/kevincharm/bls-bn254/tree/master)'s version, but actually
+this
+exists in many versions:
 
 - https://gist.github.com/kobigurk/257c1783ddf556e330f31ed57febc1d9
 - https://github.com/ralexstokes/deposit-verifier/blob/8da90a8f6fc686ab97506fd0d84568308b72f133/deposit_verifier.sol
 - https://github.com/kilic/evmbls/blob/master/contracts/BLS.sol
 - https://github.com/thehubbleproject/hubble-contracts
 
-## Initial audit
+## Features
 
-All in all, the contract performs well according to [RFC 9380](https://datatracker.ietf.org/doc/html/rfc9380). It implements the recommended `expand_msg_xmd` algorithm for hashing a bytestring to an element of the field, and likewise hashing a bytestring to a pair of elements in the field. To convert these field elements to curve elements, it implements the Shallue-van de Woestijne encoding, which is constant time, and relatively cheap to execute on-chain.
+- Efficient implementation of BLS signatures
+- Compliant with RFC 9380
+- Optimized for on-chain execution
+- Implements Shallue-van de Woestijne encoding for constant-time operations
+- Supports single signature verification
 
-This is a big difference from the other versions which implement either Fouque-Tibouchi (FT) or the try-and-increment / hash-and-pray. The problem with FT and hash-and-pray is the fact that they are not constant time algorithms, and each iteration is expensive enough so that a bad actor can produce a message that's too expensive to check on-chain. The Hubble project quantified the expense of these algorithms to be about ~30k gas. One of the most expensive steps in hash-and-pray is the sqrt step, which takes 14k gas alone by calling the modexp precompile. This is why all of these versions have ported a copy of the [ModExp.sol library](https://github.com/ChihChengLiang/modexp/blob/master/contracts/ModExp.sol), which reduces the gas used to about 7k gas. The current version using SvdW is constant-time, and reasonably cheap, at the cost of being difficult to implement.
+## Usage
 
-This version of the contract does not implement point compression, or subgroup membership. The point compression only impacts the gas used in the transaction / memory required to store signatures and keys. However, the subgroup membership checks are, in general, a security vulnerability.
+Import the BLS library in your Solidity contract:
 
-### Subgroup membership checks
-
-For BN254, the smallest $r$-order cyclic subgroup in $E(\mathbb{F}_p)$ is simply the curve itself / the $r$-torsion, namely $\mathbb{G}_1=[r]E(\mathbb{F}_p)=E(\mathbb{F}_p)$. However, this is not the case for $\mathbb{G} _2$, and so valid public keys must be checked against the subgroup of the elliptic curve field, namely $\mathbb{G} _2=[r]E^\prime(\mathbb{F} _{p^2})\subset E^\prime(\mathbb{F} _{p^2})$. Look [here](https://github.com/warlock-labs/alt-bn128-bls/blob/main/notebooks/field_extensions.ipynb) for details on these membership checks.
-These attacks would allow a bad actor to use a false public key to verify signatures.
-
-The likelihood of this attack is inversely proportional to the magnitude of the smallest prime factor of the $\mathbb{G} _2$ cofactor. Successful small group attacks are much more likely for cofactors on the order of 1-10. For BN254, $|E^\prime(\mathbb{F} _{p^2})| = c _2r$, where
-```python
-c_2 = 21888242871839275222246405745257275088844257914179612981679871602714643921549
-```
-which has the following factorization:
-```
-10069 * 5864401 * 1875725156269 * 197620364512881247228717050342013327560683201906968909
+```solidity
+import "solbls/BLS.sol";
 ```
 
-In this case, a false key would need to be of order 10069. The subgroup check, despite in not being explicitly implemented in the Solidity, is still caught eventually by the precompile at `0x08` which executes the pairing operation. The cryptography backend takes the bytes from Solidity, and after deserialization performs curve and subgroup membership checks, which then ultimately rejects malformed public keys. The reliance on the precompile to catch these malformed keys may, or may not, have been intentional from the original Solidity, but that is unclear at this time.
+Example usage:
 
-Further, while being relatively safe on BN254, $\mathbb{G} _2$ operations, including twist operations, are extremely expensive to compute on chain, which is probably the bigger reason why they are not implemented. [Current versions](https://github.com/musalbas/solidity-BN256G2) report that the estimated gas for addition and multiplication in $\mathbb{G} _2$ are 30k gas, and 2M gas respectively (!), so if nothing else, the subgroup checks were most likely cut for costs.
+```solidity
+contract MyContract {
+    using BLS for *;
 
-## Test results
+    function verifySignature(
+        uint256[2] memory signature,
+        uint256[4] memory pubkey,
+        uint256[2] memory message
+    ) public view returns (bool) {
+        // First, check if the signature and public key are valid
+        require(BLS.isValidSignature(signature), "Invalid signature");
+        require(BLS.isValidPublicKey(pubkey), "Invalid public key");
 
-The following hashing utility functions of the library are compared against implementations written in Foundry:
+        // Hash the message to a point on the curve
+        uint256[2] memory hashedMessage = BLS.hashToPoint("domain", abi.encodePacked(message));
 
-- `expandMsgTo96`: this hashes a bytestring to an element of the desired base field
-- `hashToField`: this takes a bytestring and returns a pair of elements in the base field
-    - each of these elements is then mapped to a point on the curve via SvdW, and then added to produce a hash on the curve
+        // Verify the signature
+        return BLS.verifySingle(signature, pubkey, hashedMessage);
+    }
+}
+```
 
-The above tests check random messages of ranging lengths.
+For more detailed usage examples, please refer to the test files in the `test/` directory.
 
+## Security
 
-The following cryptographic functions of the library are compared against implementations in Sage, which is used to produce reference data of inputs and outputs for the various operations:
+This version of the contract does not implement point compression or subgroup membership checks. While relatively safe
+on BN254, the reliance on the pre-compile to catch malformed keys may or may not have been intentional from the original
+Solidity implementation.
 
-- `isValidSignature`: this determines if a signature is indeed a point on $\mathbb{G} _1=[r]E(\mathbb{F} _p)$ 
-- `isValidPublicKey`: this determines if a signature is indeed a point on $\mathbb{G} _2=[r]E^\prime(\mathbb{F} _{p^2})$
-- `mapToPoint`: this is the implementation of the SvdW algorithm taking an element of the base field, and producing a point on the curve $E(\mathbb{F}_p)$. 
-- `verifySingle`: this is what actually calls the SNARK precompile to determine the validity of the pairing checks for a given hashed message, signature, and public key.
+Key security considerations:
 
-The above tests uses a set of 1000 (input, output) pairs. To generate the reference set:
+- Lack of explicit subgroup membership checks could potentially introduce vulnerabilities in certain scenarios.
+- The library relies on precompiles for key validation, which may have implications for gas costs and security.
+
+For more details on security considerations, please refer to the `audits` folder.
+
+## Install
+
+This module depends on [Foundry](https://getfoundry.sh/). Make sure you have it installed before proceeding.
+
 ```bash
-cd test/sage_reference
-make
-sage generate_refs.sage
+forge install warlock-labs/solbls
 ```
-which outputs the data into `bn254_reference_transformed.json`. 
 
-To conduct the tests, in the home directory, simply execute:
+## API
+
+The main functions provided by the BLS library include:
+
+- `verifySingle`: Verify a single BLS signature
+- `hashToPoint`: Hash a message to a point on the BN254 G1 curve
+- `isValidSignature`: Check if a given signature is valid
+- `isValidPublicKey`: Check if a given public key is valid
+
+For detailed API documentation, please refer to the comments in the `BLS.sol` file.
+
+## Testing
+
+To run the tests for solbls, use the following command:
 
 ```bash
-forge test -vvv
+forge test
 ```
 
----
-All tests pass, except the subgroup membership checks, which is to be expected. Units are gwei. `testFail_E2noG2()` does not actually use that much gas. It fails instantly.
+The tests cover various aspects of the library, including signature verification, point hashing, and input validation.
+For a detailed breakdown of test coverage, please refer to the `test/` directory.
 
-![test results](/test/test_results.png)
+## Versioning
+
+solbls follows Semantic Versioning. For the versions available, see
+the [tags on this repository](https://github.com/warlock-labs/solbls/tags).
+
+## Maintainers
+
+This project is maintained by:
+
+- [@trbritt](https://github.com/trbritt)
+- [@individualWhoCodes](https://github.com/individualWhoCodes)
+- [@0xAlcibiades](https://github.com/0xAlcibiades)
+
+## Contributing
+
+We welcome contributions to solbls! Please follow these steps to contribute:
+
+1. Fork the repository
+2. Create your feature branch (`git checkout -b feature/AmazingFeature`)
+3. Commit your changes (`git commit -m 'Add some AmazingFeature'`)
+4. Push to the branch (`git push origin feature/AmazingFeature`)
+5. Open a Pull Request
+
+Please make sure to update tests as appropriate and adhere to
+the [Solidity style guide](https://docs.soliditylang.org/en/v0.8.17/style-guide.html).
+
+## Support
+
+For support, please open an issue in the GitHub repository or reach out to the maintainers directly.
+
+## Changelog
+
+For a detailed list of changes and version history, please refer to the [CHANGELOG.md](CHANGELOG.md) file.
 
 ## License
 
-This project is licensed under the [BUSL license](https://mariadb.com/bsl11/).
+[MIT](LICENSE) © 2024 Warlock Labs
 
-## Contact
+[gha]: https://github.com/warlock-labs/solbls/actions
 
-This project is maintained by: 
-- [@trbritt](https://github.com/trbritt)
-- [@individualWhoCodes](https://github.com/individualWhoCodes)
-- [@megsdevs](https://github.com/megsdevs)
-- [@0xAlcibiades](https://github.com/0xAlcibiades)
+[gha-badge]: https://github.com/warlock-labs/solbls/actions/workflows/CI.yml/badge.svg
 
-Warlock Labs - [https://github.com/warlock-labs](https://github.com/warlock-labs)
+[foundry]: https://getfoundry.sh/
+
+[foundry-badge]: https://img.shields.io/badge/Built%20with-Foundry-FFDB1C.svg
+
+[license]: https://opensource.org/licenses/MIT
+
+[license-badge]: https://img.shields.io/badge/License-MIT-blue.svg
