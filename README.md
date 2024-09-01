@@ -6,7 +6,6 @@
 [![Foundry][foundry-badge]][foundry]
 [![License: MIT][license-badge]][license]
 [![codecov](https://codecov.io/gh/warlock-labs/solbls/graph/badge.svg?token=7LHOYFAPA8)](https://codecov.io/gh/warlock-labs/solbls)
-[![standard-readme compliant](https://img.shields.io/badge/readme%20style-standard-brightgreen.svg?style=flat-square)](https://github.com/RichardLitt/standard-readme)
 
 A Solidity library for efficient BLS signature verification over the alt-bn128 curve, optimized for on-chain
 verification.
@@ -23,16 +22,6 @@ constant time and relatively economical to execute on-chain.
 It's meant primarily for on-chain verification of signed messages produced
 by [Sylow](https://github.com/warlock-labs/sylow),
 for use in [Warlock](https://warlock.xyz)'s data feeds.
-
-It's an amalgamation of several repositories, all of which seem to be based
-on [this article](https://ethresear.ch/t/bls-signatures-in-solidity/7919).
-The library here is based upon [kevincharm](https://github.com/kevincharm/bls-bn254/tree/master)'s version, but actually
-this exists in many versions:
-
-- https://gist.github.com/kobigurk/257c1783ddf556e330f31ed57febc1d9
-- https://github.com/ralexstokes/deposit-verifier/blob/8da90a8f6fc686ab97506fd0d84568308b72f133/deposit_verifier.sol
-- https://github.com/kilic/evmbls/blob/master/contracts/BLS.sol
-- https://github.com/thehubbleproject/hubble-contracts
 
 ## Features
 
@@ -124,7 +113,7 @@ For a detailed breakdown of test coverage, please refer to the `test/` directory
 
 ## Versioning
 
-solbls follows Semantic Versioning. For the versions available, see
+SolBLS follows Semantic Versioning. For the versions available, see
 the [tags on this repository](https://github.com/warlock-labs/solbls/tags).
 
 ## Maintainers
@@ -152,9 +141,17 @@ the [Solidity style guide](https://docs.soliditylang.org/en/v0.8.26/style-guide.
 
 For support, please open an issue in the GitHub repository or reach out to the maintainers directly.
 
-## Changelog
+## History
 
-For a detailed list of changes and version history, please refer to the [CHANGELOG.md](CHANGELOG.md) file.
+This library is an amalgamation of several repositories, all of which seem to be based
+on [this article](https://ethresear.ch/t/bls-signatures-in-solidity/7919).
+The library here is based upon [kevincharm](https://github.com/kevincharm/bls-bn254/tree/master)'s version, but actually
+this exists in many versions:
+
+- https://gist.github.com/kobigurk/257c1783ddf556e330f31ed57febc1d9
+- https://github.com/ralexstokes/deposit-verifier/blob/8da90a8f6fc686ab97506fd0d84568308b72f133/deposit_verifier.sol
+- https://github.com/kilic/evmbls/blob/master/contracts/BLS.sol
+- https://github.com/thehubbleproject/hubble-contracts
 
 ## License
 
