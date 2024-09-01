@@ -21,6 +21,7 @@ library BLS {
     uint256 private constant N_G2_Y0 = 13392588948715843804641432497768002650278120570034223513918757245338268106653;
 
     // Constants for hash-to-field operations
+    // slither-disable-next-line too-many-digits
     uint256 private constant T24 = 0x1000000000000000000000000000000000000000000000000;
     uint256 private constant MASK24 = 0xffffffffffffffffffffffffffffffffffffffffffffffff;
 
