@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-pragma solidity >=0.8.17;
+pragma solidity >=0.8.23;
 
 // TODO(Gas golf these vs inline precompiles)
 import {ModexpInverse, ModexpSqrt} from "./ModExp.sol";
@@ -80,6 +80,7 @@ library BLS {
         ];
         // Use the SNARKV precompile to verify the pairing
         uint256[1] memory out;
+        // slither-disable-next-line assembly
         assembly {
             callSuccess := staticcall(sub(gas(), 2000), 8, input, 384, out, 0x20)
         }
@@ -104,6 +105,7 @@ library BLS {
         bnAddInput[3] = p1[1];
 
         bool success;
+        // slither-disable-next-line assembly
         assembly {
             // Use the BN_ADD precompile
             success := staticcall(sub(gas(), 2000), 6, bnAddInput, 128, p0, 64)
@@ -138,6 +140,7 @@ library BLS {
     /// @param point The point to check
     /// @return isOnCurve True if the point is on the curve
     function isOnCurveG1(uint256[2] memory point) internal pure returns (bool isOnCurve) {
+        // slither-disable-next-line assembly
         assembly {
             // Load point coordinates
             let t0 := mload(point)
@@ -155,6 +158,7 @@ library BLS {
     /// @param point The point to check
     /// @return isOnCurve True if the point is on the curve
     function isOnCurveG2(uint256[4] memory point) internal pure returns (bool isOnCurve) {
+        // slither-disable-next-line assembly
         assembly {
             // x0, x1
             let t0 := mload(point)
@@ -214,6 +218,7 @@ library BLS {
         uint256 u1;
         uint256 a0;
         uint256 a1;
+        // slither-disable-next-line assembly
         assembly {
             // Extract two 48-byte values from the expanded message
             // and reduce them modulo N
@@ -233,24 +238,25 @@ library BLS {
 
     /// @notice Expand arbitrary message to 96 pseudorandom bytes, as described
     ///     in rfc9380 section 5.3.1, using H = keccak256.
-    /// @param DST Domain separation tag
+    /// @param dst Domain separation tag
     /// @param message Message to expand
-    function expandMsgTo96(bytes memory DST, bytes memory message) internal pure returns (bytes memory) {
-        uint256 domainLen = DST.length;
+    function expandMsgTo96(bytes memory dst, bytes memory message) internal pure returns (bytes memory) {
+        uint256 domainLen = dst.length;
         if (domainLen > 255) {
-            revert InvalidDSTLength(DST);
+            revert InvalidDSTLength(dst);
         }
         bytes memory zpad = new bytes(136);
-        bytes memory b_0 = abi.encodePacked(zpad, message, uint8(0), uint8(96), uint8(0), DST, uint8(domainLen));
+        bytes memory b_0 = abi.encodePacked(zpad, message, uint8(0), uint8(96), uint8(0), dst, uint8(domainLen));
         bytes32 b0 = keccak256(b_0);
 
-        bytes memory b_i = abi.encodePacked(b0, uint8(1), DST, uint8(domainLen));
+        bytes memory b_i = abi.encodePacked(b0, uint8(1), dst, uint8(domainLen));
         bytes32 bi = keccak256(b_i);
 
         bytes memory out = new bytes(96);
         uint256 ell = 3;
         for (uint256 i = 1; i < ell; i++) {
-            b_i = abi.encodePacked(b0 ^ bi, uint8(1 + i), DST, uint8(domainLen));
+            b_i = abi.encodePacked(b0 ^ bi, uint8(1 + i), dst, uint8(domainLen));
+            // slither-disable-next-line assembly
             assembly {
                 let p := add(32, out)
                 p := add(p, mul(32, sub(i, 1)))
@@ -258,6 +264,7 @@ library BLS {
             }
             bi = keccak256(b_i);
         }
+        // slither-disable-next-line assembly
         assembly {
             let p := add(32, out)
             p := add(p, mul(32, sub(ell, 1)))
@@ -340,6 +347,7 @@ library BLS {
     function expModLegendre(uint256 u) private view returns (uint256 output) {
         bytes memory input = new bytes(192);
         bool success;
+        // slither-disable-next-line assembly
         assembly {
             let p := add(input, 32)
             mstore(p, 32) // len(u)
