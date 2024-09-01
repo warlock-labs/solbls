@@ -55,6 +55,11 @@ implemented. [Current versions](https://github.com/musalbas/solidity-BN256G2) re
 and multiplication in $\mathbb{G} _2$ are 30k gas, and 2M gas respectively (!), so if nothing else, the subgroup checks
 were most likely cut for costs.
 
+There is a breakdown of some more efficient ways to perform the check here:
+https://ethresear.ch/t/fast-mathbb-g-2-subgroup-check-in-bn254/13974
+
+Where the state-of-the-art is reduced to 1M gas, and thus still not feasible to perform on-chain
+
 ## Test results
 
 The following hashing utility functions of the library are compared against implementations written in Foundry:
