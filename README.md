@@ -7,12 +7,12 @@
 [![License: MIT][license-badge]][license]
 [![codecov](https://codecov.io/gh/warlock-labs/solbls/graph/badge.svg?token=7LHOYFAPA8)](https://codecov.io/gh/warlock-labs/solbls)
 
-A Solidity library for efficient BLS signature verification over the alt-bn128 curve, optimized for on-chain
+A Solidity library for efficient BLS signature verification over the BN254 curve, optimized for on-chain
 verification.
 
 ## Background
 
-SolBLS implements BLS over the alt-bn128 curve in Solidity. It performs well,
+SolBLS implements BLS over the BN254 curve in Solidity. It performs well security-wise
 according to [RFC 9380](https://datatracker.ietf.org/doc/html/rfc9380).
 It implements the recommended `expand_msg_xmd` algorithm for hashing a bytestring to an element of
 the field, and likewise hashing a bytestring to a pair of elements in the field. To convert these
@@ -25,7 +25,7 @@ for use in [Warlock](https://warlock.xyz)'s data feeds.
 
 ## Features
 
-- Efficient implementation of BLS signatures
+- Efficient implementation of BLS signature verification over the BN254 curve
 - Compliant with RFC 9380
 - Optimized for on-chain execution
 - Implements Shallue-van de Woestijne encoding for constant-time operations
@@ -63,7 +63,7 @@ contract MyContract {
 }
 ```
 
-For more detailed usage examples, please refer to the test files in the `test/` directory.
+For more detailed usage examples, please refer to the test files in the `test` directory.
 
 ## Security
 
@@ -78,10 +78,10 @@ Key security considerations:
 
 For more details on security considerations, please refer to the `audits` folder.
 
-There is a pending audit with Zellic, and for the moment, this library should be considered unaudited by
+There is a pending audit with Zellic, and for the moment this library should be considered unaudited by
 an external party.
 
-## Install
+## Installation
 
 This module depends on [Foundry](https://getfoundry.sh/). Make sure you have it installed before proceeding.
 
@@ -109,7 +109,7 @@ forge test
 ```
 
 The tests cover various aspects of the library, including signature verification, point hashing, and input validation.
-For a detailed breakdown of test coverage, please refer to the `test/` directory.
+For a detailed breakdown of test coverage, please refer to the `test` directory.
 
 ## Versioning
 
