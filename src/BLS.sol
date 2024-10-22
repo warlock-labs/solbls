@@ -1,7 +1,6 @@
 // SPDX-License-Identifier: MIT
 pragma solidity >=0.8.23;
 
-// TODO(Gas golf these vs inline precompiles)
 import {ModexpInverse, ModexpSqrt} from "./ModExp.sol";
 
 /// @title  Boneh–Lynn–Shacham (BLS) signature scheme on Barreto-Naehrig 254 bit curve (BN-254)
@@ -10,6 +9,7 @@ import {ModexpInverse, ModexpSqrt} from "./ModExp.sol";
 /// @dev Adapted from https://github.com/thehubbleproject/hubble-contracts
 /// @dev Leveraging additional documentation from https://github.com/kevincharm/bls-bn254/blob/master/contracts/BLS.sol
 /// @dev A long form article: https://hackmd.io/@liangcc/bls-solidity
+/// @dev This contract has been audited by Zellic, and implements all remediations of that report.
 library BLS {
     // Field order of BN254 curve
     uint256 private constant N = 21888242871839275222246405745257275088696311157297823662689037894645226208583;
@@ -57,12 +57,11 @@ library BLS {
     /// @param signature The signature to verify (G1 point)
     /// @param pubkey The public key (G2 point)
     /// @param message The message that was signed (G1 point)
-    /// @return pairingSuccess True if the pairing check succeeds
-    /// @return callSuccess True if the precompile call to verify the signature succeeds
+    /// @return success True if the pairing check succeeds and if the precompile call to verify the signature succeeds
     function verifySingle(uint256[2] memory signature, uint256[4] memory pubkey, uint256[2] memory message)
         internal
         view
-        returns (bool pairingSuccess, bool callSuccess)
+        returns (bool)
     {
         // Prepare input for the pairing check
         uint256[12] memory input = [
@@ -80,12 +79,13 @@ library BLS {
             pubkey[2]
         ];
         // Use the SNARKV precompile to verify the pairing
+        bool callSuccess;
         uint256[1] memory out;
         // slither-disable-next-line assembly
         assembly {
             callSuccess := staticcall(sub(gas(), 2000), 8, input, 384, out, 0x20)
         }
-        return (out[0] != 0, callSuccess);
+        return (callSuccess && (out[0] != 0));
     }
 
     /// @notice Hash a message to a point on the BN254 G1 curve
@@ -126,14 +126,17 @@ library BLS {
         }
     }
 
-    /// @notice Check if a given public key is valid (i.e., on the curve)
+    /// @notice Check if a given public key is valid (i.e., on the curve AND in
+    /// the correct r-torsion). The subgroup membership check critically involves
+    /// identifying if $[r]Q = O$ for a point $Q$ on the curve defined over the
+    /// quadratic extension, and $O$ the point at infinity.
     /// @param publicKey The public key to check
     /// @return True if the public key is valid
-    function isValidPublicKey(uint256[4] memory publicKey) internal pure returns (bool) {
+    function isValidPublicKey(uint256[4] memory publicKey) internal view returns (bool) {
         if ((publicKey[0] >= N) || (publicKey[1] >= N) || (publicKey[2] >= N || (publicKey[3] >= N))) {
             return false;
         } else {
-            return isOnCurveG2(publicKey);
+            return isElementOfG2(publicKey);
         }
     }
 
@@ -155,57 +158,41 @@ library BLS {
         }
     }
 
-    /// @notice Check if a point is on the G2 curve
+    /// @notice Check if a point is in G2, namely the r-torsion of the elliptic curve over the quadratic extension. Note
+    /// that this necessitates curve membership, which is also checked by the precompile. The verification of a public key
+    /// should not be done often given the current expected lifetime of Warlock public keys, which should mitigate
+    /// the gas of the precompile static call.
     /// @param point The point to check
-    /// @return isOnCurve True if the point is on the curve
-    function isOnCurveG2(uint256[4] memory point) internal pure returns (bool isOnCurve) {
+    /// @return bool True if the point is in the r-torsion G2
+    function isElementOfG2(uint256[4] memory point) internal view returns (bool) {
+        uint256[6] memory input = [0, 0, point[1], point[0], point[3], point[2]];
+        bool callSuccess;
+        uint256[1] memory out;
         // slither-disable-next-line assembly
         assembly {
-            // x0, x1
-            let t0 := mload(point)
-            let t1 := mload(add(point, 32))
-            // x0 ^ 2
-            let t2 := mulmod(t0, t0, N)
-            // x1 ^ 2
-            let t3 := mulmod(t1, t1, N)
-            // 3 * x0 ^ 2
-            let t4 := add(add(t2, t2), t2)
-            // 3 * x1 ^ 2
-            let t5 := addmod(add(t3, t3), t3, N)
-            // x0 * (x0 ^ 2 - 3 * x1 ^ 2)
-            t2 := mulmod(add(t2, sub(N, t5)), t0, N)
-            // x1 * (3 * x0 ^ 2 - x1 ^ 2)
-            t3 := mulmod(add(t4, sub(N, t3)), t1, N)
-
-            // x ^ 3 + b
-            t0 := addmod(t2, 0x2b149d40ceb8aaae81be18991be06ac3b5b4c5e559dbefa33267e6dc24a138e5, N)
-            t1 := addmod(t3, 0x009713b03af0fed4cd2cafadeed8fdf4a74fa084e52d1852e4a2bd0685c315d2, N)
-
-            // y0, y1
-            t2 := mload(add(point, 64))
-            t3 := mload(add(point, 96))
-            // y ^ 2
-            t4 := mulmod(addmod(t2, t3, N), addmod(t2, sub(N, t3), N), N)
-            t3 := mulmod(shl(1, t2), t3, N)
-
-            // y ^ 2 == x ^ 3 + b
-            isOnCurve := and(eq(t0, t4), eq(t1, t3))
+            callSuccess := staticcall(sub(gas(), 2000), 8, input, 192, out, 0x20)
         }
+        return (callSuccess && (out[0] == 1));
     }
 
-    /// @notice Compute the square root of a field element
+    /// @notice Compute the square root of a field element. Note that
+    /// because we accept inputs larger than the modulus, simply doing
+    /// the check `mulmod(x, x, N) == xx` is ambiguous, as this will always be false
+    /// for $xx >= N$. We therefore check for comparison against $xx % N$, as this
+    /// creates a boolean purely indicative of the presence of a valid moduluar square
+    /// root mod N.
     /// @param xx The element to compute the square root of
     /// @return x The square root
     /// @return hasRoot True if the square root exists
-    function sqrt(uint256 xx) internal pure returns (uint256 x, bool hasRoot) {
+    function sqrt(uint256 xx) internal view returns (uint256 x, bool hasRoot) {
         x = ModexpSqrt.run(xx);
-        hasRoot = mulmod(x, x, N) == xx;
+        hasRoot = mulmod(x, x, N) == (xx % N);
     }
 
     /// @notice Compute the modular multiplicative inverse of a field element
     /// @param a The element to invert
     /// @return The inverse of a
-    function inverse(uint256 a) internal pure returns (uint256) {
+    function inverse(uint256 a) internal view returns (uint256) {
         return ModexpInverse.run(a);
     }
 
@@ -292,22 +279,16 @@ library BLS {
         uint256 x3 = addmod(Z, mulmod(C4, mulmod(tv8, tv8, N), N), N);
 
         bool hasRoot;
-        uint256 gx;
-        if (legendre(g(x1)) == 1) {
-            p[0] = x1;
-            gx = g(x1);
-            (p[1], hasRoot) = sqrt(gx);
-            if (!hasRoot) revert MapToPointFailed(gx);
-        } else if (legendre(g(x2)) == 1) {
+        p[0] = x1;
+        (p[1], hasRoot) = sqrt(g(p[0]));
+        if (!hasRoot) {
             p[0] = x2;
-            gx = g(x2);
-            (p[1], hasRoot) = sqrt(gx);
-            if (!hasRoot) revert MapToPointFailed(gx);
-        } else {
-            p[0] = x3;
-            gx = g(x3);
-            (p[1], hasRoot) = sqrt(gx);
-            if (!hasRoot) revert MapToPointFailed(gx);
+            (p[1], hasRoot) = sqrt(g(p[0]));
+            if (!hasRoot) {
+                p[0] = x3;
+                (p[1], hasRoot) = sqrt(g(p[0]));
+                if (!hasRoot) revert MapToPointFailed(p[1]);
+            }
         }
         if (sgn0(u) != sgn0(p[1])) {
             p[1] = N - p[1];
@@ -325,57 +306,5 @@ library BLS {
     /// @return The sign (0 or 1)
     function sgn0(uint256 x) private pure returns (uint256) {
         return x % 2;
-    }
-
-    /// @notice Compute the Legendre symbol of a field element
-    /// @param u The field element
-    /// @return 1 if u is a quadratic residue, -1 if not, or 0 if u = 0 (mod p)
-    function legendre(uint256 u) private view returns (int8) {
-        uint256 x = expModLegendre(u);
-        if (x == N - 1) {
-            return -1;
-        }
-        if (x != 0 && x != 1) {
-            revert MapToPointFailed(u);
-        }
-        return int8(int256(x));
-    }
-
-    /// @notice Compute (u^((N-1)/2) mod N) using the EXPMOD precompile
-    /// @dev This is cheaper than an addchain for exponent (N-1)/2
-    /// @param u The base
-    /// @return output The result of the modular exponentiation
-    function expModLegendre(uint256 u) private view returns (uint256 output) {
-        bytes memory input = new bytes(192);
-        bool success;
-        // slither-disable-next-line assembly
-        assembly {
-            let p := add(input, 32)
-            mstore(p, 32) // len(u)
-            p := add(p, 32)
-            mstore(p, 32) // len(exp)
-            p := add(p, 32)
-            mstore(p, 32) // len(mod)
-            p := add(p, 32)
-            mstore(p, u) // u
-            p := add(p, 32)
-            mstore(p, C5) // (N-1)/2
-            p := add(p, 32)
-            mstore(p, N) // N
-
-            success :=
-                staticcall(
-                    gas(),
-                    5,
-                    add(input, 32),
-                    192,
-                    0x00, // scratch space <- result
-                    32
-                )
-            output := mload(0x00) // output <- result
-        }
-        if (!success) {
-            revert ModExpFailed(u, C5, N);
-        }
     }
 }
