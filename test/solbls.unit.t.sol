@@ -26,18 +26,11 @@ contract BLSUnitTest is Test {
     // Constants for hashing and padding
     uint256 zero = 0;
     string domain = "BLS_SIG_BN254G1_XMD:KECCAK-256_SSWU_RO_NUL_";
-    bytes zpad =
-        abi.encodePacked(abi.encodePacked(zero, zero, zero, zero), uint64(0));
+    bytes zpad = abi.encodePacked(abi.encodePacked(zero, zero, zero, zero), uint64(0));
 
     // Load test cases from JSON file
     string root = vm.projectRoot();
-    string json =
-        vm.readFile(
-            string.concat(
-                root,
-                "/test/sage_reference/bn254_reference_transformed.json"
-            )
-        );
+    string json = vm.readFile(string.concat(root, "/test/sage_reference/bn254_reference_transformed.json"));
     uint256[] private_keys = vm.parseJsonUintArray(json, ".private_keys");
 
     // setUp function to initialize test data
@@ -47,22 +40,10 @@ contract BLSUnitTest is Test {
             string memory strNum = vm.toString(i);
             string memory left = string.concat("[", strNum);
             string memory lookup = string.concat(left, "]");
-            uint256[] memory rawG1 = vm.parseJsonUintArray(
-                json,
-                string.concat(".G1_signatures", lookup)
-            );
-            uint256[] memory rawG2 = vm.parseJsonUintArray(
-                json,
-                string.concat(".G2_public_keys", lookup)
-            );
-            uint256[] memory rawE2 = vm.parseJsonUintArray(
-                json,
-                string.concat(".E2_non_G2", lookup)
-            );
-            uint256[] memory rawSVDW = vm.parseJsonUintArray(
-                json,
-                string.concat(".svdw", lookup)
-            );
+            uint256[] memory rawG1 = vm.parseJsonUintArray(json, string.concat(".G1_signatures", lookup));
+            uint256[] memory rawG2 = vm.parseJsonUintArray(json, string.concat(".G2_public_keys", lookup));
+            uint256[] memory rawE2 = vm.parseJsonUintArray(json, string.concat(".E2_non_G2", lookup));
+            uint256[] memory rawSVDW = vm.parseJsonUintArray(json, string.concat(".svdw", lookup));
             g1_signatures.push(rawG1);
             g2_public_keys.push(rawG2);
             e2_non_g2.push(rawE2);
@@ -78,84 +59,40 @@ contract BLSUnitTest is Test {
 
         // Construct and hash the initial message block
         bytes memory b_0 = abi.encodePacked(
-            zpad,
-            expMsg,
-            uint8(outputLen >> 8),
-            uint8(outputLen & 255),
-            uint8(0),
-            bytes(domain),
-            domainLength
+            zpad, expMsg, uint8(outputLen >> 8), uint8(outputLen & 255), uint8(0), bytes(domain), domainLength
         );
         bytes32 b_0_hashed = keccak256(b_0);
 
         // Construct and hash subsequent blocks (simplified version of the loop in BLS.ts)
-        bytes memory b_i = abi.encodePacked(
-            b_0_hashed,
-            uint8(1),
-            bytes(domain),
-            domainLength
-        );
+        bytes memory b_i = abi.encodePacked(b_0_hashed, uint8(1), bytes(domain), domainLength);
         bytes32 b_i_hashed = keccak256(b_i);
-        bytes memory newb_i = abi.encodePacked(
-            b_i_hashed ^ b_0_hashed,
-            uint8(2),
-            bytes(domain),
-            domainLength
-        );
+        bytes memory newb_i = abi.encodePacked(b_i_hashed ^ b_0_hashed, uint8(2), bytes(domain), domainLength);
         bytes32 newHash = keccak256(newb_i);
-        bytes memory newb_ii = abi.encodePacked(
-            newHash ^ b_0_hashed,
-            uint8(3),
-            bytes(domain),
-            domainLength
-        );
+        bytes memory newb_ii = abi.encodePacked(newHash ^ b_0_hashed, uint8(3), bytes(domain), domainLength);
         bytes32 secondHash = keccak256(newb_ii);
 
         // Assert equivalence between our implementation and the library
         assert(
-            keccak256(BLS.expandMsgTo96(bytes(domain), expMsg)) ==
-                keccak256(abi.encodePacked(b_i_hashed, newHash, secondHash))
+            keccak256(BLS.expandMsgTo96(bytes(domain), expMsg))
+                == keccak256(abi.encodePacked(b_i_hashed, newHash, secondHash))
         );
     }
 
     // Helper function for expand_message, used by testHash_to_field
-    function expand_message(
-        bytes memory message
-    ) private view returns (bytes memory) {
+    function expand_message(bytes memory message) private view returns (bytes memory) {
         uint8 outputLen = 96;
         uint8 domainLength = 43;
 
         bytes memory b_0 = abi.encodePacked(
-            zpad,
-            message,
-            uint8(outputLen >> 8),
-            uint8(outputLen & 255),
-            uint8(0),
-            bytes(domain),
-            domainLength
+            zpad, message, uint8(outputLen >> 8), uint8(outputLen & 255), uint8(0), bytes(domain), domainLength
         );
         bytes32 b_0_hashed = keccak256(b_0);
 
-        bytes memory b_i = abi.encodePacked(
-            b_0_hashed,
-            uint8(1),
-            bytes(domain),
-            domainLength
-        );
+        bytes memory b_i = abi.encodePacked(b_0_hashed, uint8(1), bytes(domain), domainLength);
         bytes32 b_i_hashed = keccak256(b_i);
-        bytes memory newb_i = abi.encodePacked(
-            b_i_hashed ^ b_0_hashed,
-            uint8(2),
-            bytes(domain),
-            domainLength
-        );
+        bytes memory newb_i = abi.encodePacked(b_i_hashed ^ b_0_hashed, uint8(2), bytes(domain), domainLength);
         bytes32 newHash = keccak256(newb_i);
-        bytes memory newb_ii = abi.encodePacked(
-            newHash ^ b_0_hashed,
-            uint8(3),
-            bytes(domain),
-            domainLength
-        );
+        bytes memory newb_ii = abi.encodePacked(newHash ^ b_0_hashed, uint8(3), bytes(domain), domainLength);
         bytes32 secondHash = keccak256(newb_ii);
 
         return abi.encodePacked(b_i_hashed, newHash, secondHash);
@@ -164,8 +101,7 @@ contract BLSUnitTest is Test {
     // Test the hash_to_field function used in BLS signatures
     function testHash_to_field(bytes memory rands) public view {
         bytes memory expanded = expand_message(rands);
-        bytes
-            memory ord = hex"30644e72e131a029b85045b68181585d97816a916871ca8d3c208c16d87cfd47";
+        bytes memory ord = hex"30644e72e131a029b85045b68181585d97816a916871ca8d3c208c16d87cfd47";
 
         // Split the expanded message into two parts
         bytes memory left = new bytes(48);
@@ -219,21 +155,13 @@ contract BLSUnitTest is Test {
 
     // Check internal consistency of the library
     function testLibraryConsistent() public noGasMetering {
-        uint256[2] memory pt = BLS.hashToPoint(
-            bytes(domain),
-            bytes("Hello world!")
-        );
+        uint256[2] memory pt = BLS.hashToPoint(bytes(domain), bytes("Hello world!"));
         assert(BLS.isOnCurveG1(pt));
         for (uint256 i = 0; i < 1000; i++) {
             uint256[] memory iq = g1_signatures[i];
             uint256[] memory iqTwo = g2_public_keys[i];
             uint256[2] memory iqOw = [iq[0], iq[1]];
-            uint256[4] memory iqTwoOw = [
-                iqTwo[0],
-                iqTwo[1],
-                iqTwo[2],
-                iqTwo[3]
-            ];
+            uint256[4] memory iqTwoOw = [iqTwo[0], iqTwo[1], iqTwo[2], iqTwo[3]];
             assert(BLS.isValidPublicKey(iqTwoOw));
             assert(BLS.isValidSignature(iqOw));
             assert(BLS.verifySingle(iqOw, iqTwoOw, pt));

@@ -30,22 +30,9 @@ library ModexpInverse {
             mstore(add(memPtr, 0x20), 0x20)
             mstore(add(memPtr, 0x40), 0x20)
             mstore(add(memPtr, 0x60), base)
-            mstore(
-                add(memPtr, 0x80),
-                0x30644e72e131a029b85045b68181585d97816a916871ca8d3c208c16d87cfd45
-            )
-            mstore(
-                add(memPtr, 0xa0),
-                0x30644e72e131a029b85045b68181585d97816a916871ca8d3c208c16d87cfd47
-            )
-            success := staticcall(
-                sub(gas(), 2000),
-                0x05,
-                memPtr,
-                0xc0,
-                memPtr,
-                0x20
-            )
+            mstore(add(memPtr, 0x80), 0x30644e72e131a029b85045b68181585d97816a916871ca8d3c208c16d87cfd45)
+            mstore(add(memPtr, 0xa0), 0x30644e72e131a029b85045b68181585d97816a916871ca8d3c208c16d87cfd47)
+            success := staticcall(sub(gas(), 2000), 0x05, memPtr, 0xc0, memPtr, 0x20)
             result := mload(memPtr)
         }
     }
@@ -75,22 +62,9 @@ library ModexpSqrt {
             mstore(add(memPtr, 0x20), 0x20)
             mstore(add(memPtr, 0x40), 0x20)
             mstore(add(memPtr, 0x60), base)
-            mstore(
-                add(memPtr, 0x80),
-                0xc19139cb84c680a6e14116da060561765e05aa45a1c72a34f082305b61f3f52
-            )
-            mstore(
-                add(memPtr, 0xa0),
-                0x30644e72e131a029b85045b68181585d97816a916871ca8d3c208c16d87cfd47
-            )
-            success := staticcall(
-                sub(gas(), 2000),
-                0x05,
-                memPtr,
-                0xc0,
-                memPtr,
-                0x20
-            )
+            mstore(add(memPtr, 0x80), 0xc19139cb84c680a6e14116da060561765e05aa45a1c72a34f082305b61f3f52)
+            mstore(add(memPtr, 0xa0), 0x30644e72e131a029b85045b68181585d97816a916871ca8d3c208c16d87cfd47)
+            success := staticcall(sub(gas(), 2000), 0x05, memPtr, 0xc0, memPtr, 0x20)
             result := mload(memPtr)
         }
     }

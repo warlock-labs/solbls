@@ -12,25 +12,18 @@ import {ModexpInverse, ModexpSqrt} from "./ModExp.sol";
 /// @dev This contract has been audited by Zellic, and implements all remediations of that report.
 library BLS {
     // Field order of BN254 curve
-    uint256 private constant N =
-        21888242871839275222246405745257275088696311157297823662689037894645226208583;
+    uint256 private constant N = 21888242871839275222246405745257275088696311157297823662689037894645226208583;
 
     // Negated generator of G2 (required for pairing checks)
-    uint256 private constant N_G2_X1 =
-        11559732032986387107991004021392285783925812861821192530917403151452391805634;
-    uint256 private constant N_G2_X0 =
-        10857046999023057135944570762232829481370756359578518086990519993285655852781;
-    uint256 private constant N_G2_Y1 =
-        17805874995975841540914202342111839520379459829704422454583296818431106115052;
-    uint256 private constant N_G2_Y0 =
-        13392588948715843804641432497768002650278120570034223513918757245338268106653;
+    uint256 private constant N_G2_X1 = 11559732032986387107991004021392285783925812861821192530917403151452391805634;
+    uint256 private constant N_G2_X0 = 10857046999023057135944570762232829481370756359578518086990519993285655852781;
+    uint256 private constant N_G2_Y1 = 17805874995975841540914202342111839520379459829704422454583296818431106115052;
+    uint256 private constant N_G2_Y0 = 13392588948715843804641432497768002650278120570034223513918757245338268106653;
 
     // Constants for hash-to-field operations
     // slither-disable-next-line too-many-digits
-    uint256 private constant T24 =
-        0x1000000000000000000000000000000000000000000000000;
-    uint256 private constant MASK24 =
-        0xffffffffffffffffffffffffffffffffffffffffffffffff;
+    uint256 private constant T24 = 0x1000000000000000000000000000000000000000000000000;
+    uint256 private constant MASK24 = 0xffffffffffffffffffffffffffffffffffffffffffffffff;
 
     // Curve parameters and constants for Simplified SWU mapping
 
@@ -43,18 +36,14 @@ library BLS {
     /// @notice g(Z) where g(x) = x^3 + 3
     uint256 private constant C1 = 0x4;
     /// @notice -Z / 2 (mod N)
-    uint256 private constant C2 =
-        0x183227397098d014dc2822db40c0ac2ecbc0b548b438e5469e10460b6c3e7ea3;
+    uint256 private constant C2 = 0x183227397098d014dc2822db40c0ac2ecbc0b548b438e5469e10460b6c3e7ea3;
     /// @notice C3 = sqrt(-g(Z) * (3 * Z^2 + 4 * A)) (mod N)
     ///     and sgn0(C3) == 0
-    uint256 private constant C3 =
-        0x16789af3a83522eb353c98fc6b36d713d5d8d1cc5dffffffa;
+    uint256 private constant C3 = 0x16789af3a83522eb353c98fc6b36d713d5d8d1cc5dffffffa;
     /// @notice 4 * -g(Z) / (3 * Z^2 + 4 * A) (mod N)
-    uint256 private constant C4 =
-        0x10216f7ba065e00de81ac1e7808072c9dd2b2385cd7b438469602eb24829a9bd;
+    uint256 private constant C4 = 0x10216f7ba065e00de81ac1e7808072c9dd2b2385cd7b438469602eb24829a9bd;
     /// @notice (N - 1) / 2
-    uint256 private constant C5 =
-        0x183227397098d014dc2822db40c0ac2ecbc0b548b438e5469e10460b6c3e7ea3;
+    uint256 private constant C5 = 0x183227397098d014dc2822db40c0ac2ecbc0b548b438e5469e10460b6c3e7ea3;
 
     // Error messages
 
@@ -69,11 +58,11 @@ library BLS {
     /// @param pubkey The public key (G2 point)
     /// @param message The message that was signed (G1 point)
     /// @return success True if the pairing check succeeds and if the precompile call to verify the signature succeeds
-    function verifySingle(
-        uint256[2] memory signature,
-        uint256[4] memory pubkey,
-        uint256[2] memory message
-    ) internal view returns (bool) {
+    function verifySingle(uint256[2] memory signature, uint256[4] memory pubkey, uint256[2] memory message)
+        internal
+        view
+        returns (bool)
+    {
         // Prepare input for the pairing check
         uint256[12] memory input = [
             signature[0],
@@ -94,14 +83,7 @@ library BLS {
         uint256[1] memory out;
         // slither-disable-next-line assembly
         assembly {
-            callSuccess := staticcall(
-                sub(gas(), 2000),
-                8,
-                input,
-                384,
-                out,
-                0x20
-            )
+            callSuccess := staticcall(sub(gas(), 2000), 8, input, 384, out, 0x20)
         }
         return (callSuccess && (out[0] != 0));
     }
@@ -110,10 +92,7 @@ library BLS {
     /// @param domain Domain separation tag
     /// @param message Message to hash
     /// @return A point in G1
-    function hashToPoint(
-        bytes memory domain,
-        bytes memory message
-    ) internal view returns (uint256[2] memory) {
+    function hashToPoint(bytes memory domain, bytes memory message) internal view returns (uint256[2] memory) {
         // Hash the message to two field elements
         uint256[2] memory u = hashToField(domain, message);
 
@@ -139,9 +118,7 @@ library BLS {
     //// @notice Check if a given signature is valid (i.e., on the curve)
     /// @param signature The signature to check
     /// @return True if the signature is valid
-    function isValidSignature(
-        uint256[2] memory signature
-    ) internal pure returns (bool) {
+    function isValidSignature(uint256[2] memory signature) internal pure returns (bool) {
         if ((signature[0] >= N) || (signature[1] >= N)) {
             return false;
         } else {
@@ -155,14 +132,8 @@ library BLS {
     /// quadratic extension, and $O$ the point at infinity.
     /// @param publicKey The public key to check
     /// @return True if the public key is valid
-    function isValidPublicKey(
-        uint256[4] memory publicKey
-    ) internal view returns (bool) {
-        if (
-            (publicKey[0] >= N) ||
-            (publicKey[1] >= N) ||
-            (publicKey[2] >= N || (publicKey[3] >= N))
-        ) {
+    function isValidPublicKey(uint256[4] memory publicKey) internal view returns (bool) {
+        if ((publicKey[0] >= N) || (publicKey[1] >= N) || (publicKey[2] >= N || (publicKey[3] >= N))) {
             return false;
         } else {
             return isElementOfG2(publicKey);
@@ -172,9 +143,7 @@ library BLS {
     /// @notice Check if a point is on the G1 curve
     /// @param point The point to check
     /// @return isOnCurve True if the point is on the curve
-    function isOnCurveG1(
-        uint256[2] memory point
-    ) internal pure returns (bool isOnCurve) {
+    function isOnCurveG1(uint256[2] memory point) internal pure returns (bool isOnCurve) {
         // slither-disable-next-line assembly
         assembly {
             // Load point coordinates
@@ -195,29 +164,13 @@ library BLS {
     /// the gas of the precompile static call.
     /// @param point The point to check
     /// @return bool True if the point is in the r-torsion G2
-    function isElementOfG2(
-        uint256[4] memory point
-    ) internal view returns (bool) {
-        uint256[6] memory input = [
-            0,
-            0,
-            point[1],
-            point[0],
-            point[3],
-            point[2]
-        ];
+    function isElementOfG2(uint256[4] memory point) internal view returns (bool) {
+        uint256[6] memory input = [0, 0, point[1], point[0], point[3], point[2]];
         bool callSuccess;
         uint256[1] memory out;
         // slither-disable-next-line assembly
         assembly {
-            callSuccess := staticcall(
-                sub(gas(), 2000),
-                8,
-                input,
-                192,
-                out,
-                0x20
-            )
+            callSuccess := staticcall(sub(gas(), 2000), 8, input, 192, out, 0x20)
         }
         return (callSuccess && (out[0] == 1));
     }
@@ -247,10 +200,7 @@ library BLS {
     /// @param domain Domain separation tag
     /// @param message Message to hash
     /// @return Two field elements
-    function hashToField(
-        bytes memory domain,
-        bytes memory message
-    ) internal pure returns (uint256[2] memory) {
+    function hashToField(bytes memory domain, bytes memory message) internal pure returns (uint256[2] memory) {
         bytes memory _msg = expandMsgTo96(domain, message);
         uint256 u0;
         uint256 u1;
@@ -278,43 +228,22 @@ library BLS {
     ///     in rfc9380 section 5.3.1, using H = keccak256.
     /// @param dst Domain separation tag
     /// @param message Message to expand
-    function expandMsgTo96(
-        bytes memory dst,
-        bytes memory message
-    ) internal pure returns (bytes memory) {
+    function expandMsgTo96(bytes memory dst, bytes memory message) internal pure returns (bytes memory) {
         uint256 domainLen = dst.length;
         if (domainLen > 255) {
             revert InvalidDSTLength(dst);
         }
         bytes memory zpad = new bytes(136);
-        bytes memory b_0 = abi.encodePacked(
-            zpad,
-            message,
-            uint8(0),
-            uint8(96),
-            uint8(0),
-            dst,
-            uint8(domainLen)
-        );
+        bytes memory b_0 = abi.encodePacked(zpad, message, uint8(0), uint8(96), uint8(0), dst, uint8(domainLen));
         bytes32 b0 = keccak256(b_0);
 
-        bytes memory b_i = abi.encodePacked(
-            b0,
-            uint8(1),
-            dst,
-            uint8(domainLen)
-        );
+        bytes memory b_i = abi.encodePacked(b0, uint8(1), dst, uint8(domainLen));
         bytes32 bi = keccak256(b_i);
 
         bytes memory out = new bytes(96);
         uint256 ell = 3;
         for (uint256 i = 1; i < ell; i++) {
-            b_i = abi.encodePacked(
-                b0 ^ bi,
-                uint8(1 + i),
-                dst,
-                uint8(domainLen)
-            );
+            b_i = abi.encodePacked(b0 ^ bi, uint8(1 + i), dst, uint8(domainLen));
             // slither-disable-next-line assembly
             assembly {
                 let p := add(32, out)
