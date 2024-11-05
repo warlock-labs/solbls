@@ -142,15 +142,6 @@ contract BLSUnitTest is Test {
         }
     }
 
-    // Check that E'(Fp2) reference points that are not in the r-torsion are correctly rejected from G2
-    function testFail_E2noG2() public noGasMetering {
-        for (uint256 i = 0; i < 1000; i++) {
-            uint256[] memory iq = e2_non_g2[i];
-            uint256[4] memory iqOw = [iq[0], iq[1], iq[2], iq[3]];
-            assert(BLS.isValidPublicKey(iqOw) == false);
-        }
-    }
-
     // Test SvdW (Shallue-van de Woestijne) algorithm implementation
     function testSVDW() public noGasMetering {
         for (uint256 i = 0; i < 1000; i++) {
@@ -173,31 +164,16 @@ contract BLSUnitTest is Test {
             uint256[4] memory iqTwoOw = [iqTwo[0], iqTwo[1], iqTwo[2], iqTwo[3]];
             assert(BLS.isValidPublicKey(iqTwoOw));
             assert(BLS.isValidSignature(iqOw));
-            (bool pairingSuccess, bool callSuccess) = BLS.verifySingle(iqOw, iqTwoOw, pt);
-            if (callSuccess) {
-                assert(pairingSuccess);
-            } else {
-                assert(pairingSuccess == false);
-            }
+            assert(BLS.verifySingle(iqOw, iqTwoOw, pt));
         }
     }
 
     // Check internal consistency of the library using E2 points not in G2
-    function testLibConsistentTwo() public noGasMetering {
-        uint256[2] memory pt = BLS.hashToPoint(bytes(domain), bytes("Hello world!"));
+    function testRejectInvalidSubgroupG2() public noGasMetering {
         for (uint256 i = 0; i < 1000; i++) {
-            uint256[] memory iq = g1_signatures[i];
-            uint256[] memory iqTwo = e2_non_g2[i];
-            uint256[2] memory iqOw = [iq[0], iq[1]];
-            uint256[4] memory iqTwoOw = [iqTwo[0], iqTwo[1], iqTwo[2], iqTwo[3]];
-            assert(BLS.isValidPublicKey(iqTwoOw));
-            assert(BLS.isValidSignature(iqOw));
-            (bool pairingSuccess, bool callSuccess) = BLS.verifySingle(iqOw, iqTwoOw, pt);
-            if (callSuccess) {
-                assert(pairingSuccess);
-            } else {
-                assert(pairingSuccess == false);
-            }
+            uint256[] memory iq = e2_non_g2[i];
+            uint256[4] memory iqOw = [iq[0], iq[1], iq[2], iq[3]];
+            assertFalse(BLS.isValidPublicKey(iqOw));
         }
     }
 }
