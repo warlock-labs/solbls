@@ -230,7 +230,7 @@ library BLS {
     /// @param message Message to expand
     function expandMsgTo96(bytes memory dst, bytes memory message) internal pure returns (bytes memory) {
         uint256 domainLen = dst.length;
-        if (domainLen > 255) {
+        if ((domainLen > 255) || (domainLen == 0)) {
             revert InvalidDSTLength(dst);
         }
         bytes memory zpad = new bytes(136);
